@@ -82,6 +82,12 @@ jobs:
     environment:
       name: release
       url: https://pypi.org/project/casacoretables
+    # PyPI Trusted Publishing (OIDC): the action exchanges a short-lived GitHub
+    # OIDC token for a PyPI upload token, so no API token / secret is needed.
+    # This requires `id-token: write`; without it the action fails with
+    # "ACTIONS_ID_TOKEN_REQUEST_TOKEN environment variable was unset".
+    permissions:
+      id-token: write
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -93,8 +99,9 @@ jobs:
           name: sdist
           path: dist
       - name: Publish distribution 📦 to PyPI
+        # No user/password: authentication is via Trusted Publishing. A matching
+        # trusted publisher must be configured on PyPI for this repo/workflow/
+        # environment (one-time setup; see repo notes).
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: "__token__"
-          password: ${{ secrets.PYPI_TOKEN }}
-          # skip-existing: true
+          skip-existing: true
