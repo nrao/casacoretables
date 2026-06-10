@@ -10,7 +10,7 @@ name = "casacoretables"
 version = "0.0.2"
 description = "Standalone, minimal-dependency casacore table system with a pybind11 interface"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 license = { text = "LGPL-3.0-or-later" }
 authors = [
     { name = "Jan-Willem Steeb", email = "jsteeb@nrao.edu" },
@@ -25,7 +25,6 @@ classifiers = [
 ]
 dependencies = [
     "numpy>=1.20.0",
-    "pyrap",
 ]
 
 [project.optional-dependencies]

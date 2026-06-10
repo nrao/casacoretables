@@ -1,5 +1,5 @@
 import unittest
-from pyrap.util import substitute
+from casacoretables.util import substitute
 
 
 def f1(arg):

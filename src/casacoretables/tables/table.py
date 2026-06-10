@@ -47,6 +47,23 @@ from .tablehelper import (_add_prefix, _remove_prefix, _do_remove_prefix,
 # tables-only package does not bundle.
 
 
+def _as_corner(value):
+    """Coerce a slice corner (blc/trc/inc) to a sequence.
+
+    python-casacore accepts a bare scalar where an IPosition (blc, trc or inc)
+    is expected and treats it as a 1-element corner. The pybind11 ``_tables``
+    bindings require an actual sequence, so we mirror python-casacore's leniency
+    here by wrapping a scalar integer in a list. Sequences pass through
+    unchanged.
+    """
+    if hasattr(value, "__len__"):
+        # already a sequence (list, tuple, ndarray, ...)
+        return value
+    if isinstance(value, (int, float)) or hasattr(value, "__index__"):
+        return [int(value)]
+    return value
+
+
 # Execute a TaQL command on a table.
 def taql(command, style='Python', tables=[], globals={}, locals={}):
     """Execute a TaQL command and return a table object.
@@ -919,7 +936,10 @@ class table(Table):
         if not nparray.flags.c_contiguous or nparray.size == 0:
             raise ValueError("Argument 'nparray' has to be a contiguous " +
                              "numpy array")
-        return self._getcellvh(columnname, rownr, nparray)
+        # See getcolnp for why we copy in rather than using the SHARE-into-buffer
+        # path (self._getcellvh).
+        nparray[...] = self._getcell(columnname, rownr)
+        return nparray
 
     def getcellslice(self, columnname, rownr, blc, trc, inc=[]):
         """Get a slice from a column cell holding an array.
@@ -934,7 +954,8 @@ class table(Table):
 
         """
         return self._getcellslice(columnname, rownr,
-                                  blc, trc, inc)
+                                  _as_corner(blc), _as_corner(trc),
+                                  _as_corner(inc))
 
     def getcellslicenp(self, columnname, nparray, rownr, blc, trc, inc=[]):
         """Get a slice from a column cell into the given numpy array.
@@ -954,8 +975,10 @@ class table(Table):
         if not nparray.flags.c_contiguous or nparray.size == 0:
             raise ValueError("Argument 'nparray' has to be a contiguous " +
                              "numpy array")
-        return self._getcellslicevh(columnname, rownr,
-                                    blc, trc, inc, nparray)
+        # See getcolnp for why we copy in rather than using the SHARE-into-buffer
+        # path (self._getcellslicevh).
+        nparray[...] = self.getcellslice(columnname, rownr, blc, trc, inc)
+        return nparray
 
     def getcol(self, columnname, startrow=0, nrow=-1, rowincr=1):
         """Get the contents of a column or part of it.
@@ -998,7 +1021,17 @@ class table(Table):
         if (not nparray.flags.c_contiguous) or nparray.size == 0:
             raise ValueError("Argument 'nparray' has to be a contiguous " +
                              "numpy array")
-        return self._getcolvh(columnname, startrow, nrow, rowincr, nparray)
+        # Populate `nparray` by copying in the column data, rather than letting
+        # casacore write directly into the (SHARE-wrapped) numpy buffer via
+        # self._getcolvh. That zero-copy in-place write is not reliably observed
+        # in every execution context -- in particular inside dask's `to_zarr`
+        # compute it can silently leave `nparray` untouched (all NaN), corrupting
+        # reads (e.g. xradio's parallel_mode="time" conversion). `_getcol`
+        # returns a numpy view over casacore storage (itself zero-copy); the
+        # assignment is one guaranteed copy into the caller's buffer and matches
+        # python-casacore's observable behavior.
+        nparray[...] = self._getcol(columnname, startrow, nrow, rowincr)
+        return nparray
 
     def getvarcol(self, columnname, startrow=0, nrow=-1, rowincr=1):
         """Get the contents of a column or part of it.
@@ -1023,8 +1056,8 @@ class table(Table):
         cells. The other axes are the array axes.
 
         """
-        return self._getcolslice(columnname, blc, trc, inc,
-                                 startrow, nrow, rowincr)
+        return self._getcolslice(columnname, _as_corner(blc), _as_corner(trc),
+                                 _as_corner(inc), startrow, nrow, rowincr)
 
     def getcolslicenp(self, columnname, nparray, blc, trc, inc=[],
                       startrow=0, nrow=-1, rowincr=1):
@@ -1045,8 +1078,11 @@ class table(Table):
         if not nparray.flags.c_contiguous or nparray.size == 0:
             raise ValueError("Argument 'nparray' has to be a contiguous "
                              + "numpy array")
-        return self._getcolslicevh(columnname, blc, trc, inc,
-                                   startrow, nrow, rowincr, nparray)
+        # See getcolnp for why we copy in rather than using the SHARE-into-buffer
+        # path (self._getcolslicevh).
+        nparray[...] = self.getcolslice(columnname, blc, trc, inc,
+                                        startrow, nrow, rowincr)
+        return nparray
 
     def putcell(self, columnname, rownr, value):
         """Put a value into one or more table cells.
@@ -1088,7 +1124,7 @@ class table(Table):
 
         """
         self._putcellslice(columnname, rownr, value,
-                           blc, trc, inc)
+                           _as_corner(blc), _as_corner(trc), _as_corner(inc))
 
     def putcol(self, columnname, value, startrow=0, nrow=-1, rowincr=1):
         """Put an entire column or part of it.
@@ -1122,8 +1158,8 @@ class table(Table):
         Its arguments are the same as for getcolslice and putcellslice.
 
         """
-        self._putcolslice(columnname, value, blc, trc, inc,
-                          startrow, nrow, rowincr)
+        self._putcolslice(columnname, value, _as_corner(blc), _as_corner(trc),
+                          _as_corner(inc), startrow, nrow, rowincr)
 
     def addcols(self, desc, dminfo={}, addtoparent=True):
         """Add one or more columns.

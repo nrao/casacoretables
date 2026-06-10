@@ -137,6 +137,42 @@ class tablerow(_tablerow):
         _tablerow.__init__(self, table, columnnames, exclude)
         self._table = table
 
+    def get(self, rownr):
+        """Get the contents of the given row.
+
+        For variable-shaped array columns a cell can be *undefined* (no value
+        has been written). python-casacore returns an empty array for such a
+        cell; casacore's TableRow proxy instead yields an uninitialized scalar.
+        We match python-casacore here -- replacing the value of any undefined
+        cell with an empty array of the same dtype -- so that callers can
+        reliably detect empty/undefined cells (e.g. when loading generic MS
+        subtables with optional, often-empty array columns).
+        """
+        import numpy as np
+
+        rec = _tablerow.get(self, rownr)
+        for name, value in rec.items():
+            try:
+                if self._table.iscelldefined(name, rownr):
+                    continue
+            except Exception:
+                continue
+            # python-casacore returns an empty value matching the column type for
+            # an undefined cell: an empty numpy array for numeric columns, and a
+            # {"shape": [], "array": []} record for (N-D) string columns.
+            try:
+                is_string = self._table.coldatatype(name) == "string"
+            except Exception:
+                is_string = isinstance(value, (list, dict, str))
+            if is_string:
+                rec[name] = {"shape": [], "array": []}
+            else:
+                dtype = getattr(value, "dtype", None)
+                rec[name] = (
+                    np.array([], dtype=dtype) if dtype is not None else np.array([])
+                )
+        return rec
+
     def __enter__(self):
         """Function to enter a with block."""
         return self
