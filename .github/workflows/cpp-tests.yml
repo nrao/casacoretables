@@ -1,0 +1,42 @@
+# Build the vendored casacore C++ table library and run its unit tests (ctest).
+#
+# Configures with -DBUILD_CPP_TESTS=ON (and the pybind11 module off, since it
+# is not needed for the C++ tests). Each test runs in a private temp directory
+# via tests/cpp/run_assay.sh, so parallel ctest is safe.
+name: C++ Tests
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+      - '**.rst'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '**.rst'
+
+jobs:
+  ctest:
+    name: ctest (ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build tools (bison>=3, flex, cmake, ninja)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bison flex cmake ninja-build g++
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_CPP_TESTS=ON \
+            -DBUILD_PYTHON_MODULE=OFF
+
+      - name: Build (library + test executables)
+        run: cmake --build build --parallel
+
+      - name: Run C++ tests
+        working-directory: build
+        run: ctest --output-on-failure -j4

@@ -1,0 +1,51 @@
+[build-system]
+requires = [
+    "scikit-build-core>=0.8",
+    "pybind11>=2.10.0",
+]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "casacoretables"
+version = "0.0.1"
+description = "Standalone, minimal-dependency casacore table system with a pybind11 interface"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "LGPL-3.0-or-later" }
+authors = [
+    { name = "Jan-Willem Steeb", email = "jsteeb@nrao.edu" },
+]
+keywords = ["casacore", "tables", "radio astronomy", "pybind11"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Astronomy",
+]
+dependencies = [
+    "numpy>=1.20.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+all = ["pytest", "pytest-cov", "pytest-html"]
+
+[tool.scikit-build]
+build-dir = "build/{wheel_tag}"
+wheel.packages = ["src/casacoretables"]
+# Exclude the C++ unit-test sources / vendored test data from the wheel.
+sdist.exclude = ["build", "tests/cpp"]
+
+[tool.scikit-build.cmake]
+version = ">=3.18"
+build-type = "Release"
+
+[tool.scikit-build.cmake.define]
+BUILD_PYTHON_MODULE = "ON"
+BUILD_CPP_TESTS = "OFF"
+PYBIND11_FINDPYTHON = "ON"
+
+# Build requirements (not Python packages): a C++17 compiler, plus bison>=3 and
+# flex to generate the TaQL/Json parsers. Install via conda, e.g.
+#   conda install -n <env> bison flex

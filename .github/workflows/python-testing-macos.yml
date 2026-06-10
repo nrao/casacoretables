@@ -1,0 +1,55 @@
+# Python tests on macOS.
+#
+# Standalone (does not call the shared template) for two reasons:
+#   * the shared macOS template installs python-casacore and pins libboost,
+#     neither of which this package uses;
+#   * casacoretables is compiled and needs bison>=3 / flex at build time.
+#
+# Uses conda (conda-forge) for the build tools, mirroring the package's
+# development environment; the C++ compiler is the runner's system clang.
+name: MacOS Tests
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+      - '**.rst'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '**.rst'
+
+jobs:
+  test:
+    name: macos (py${{ matrix.python-version }})
+    runs-on: macos-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-activate-base: false
+          activate-environment: test
+          python-version: ${{ matrix.python-version }}
+          channels: conda-forge
+          channel-priority: strict
+          miniforge-version: latest
+
+      - name: Install build tools (bison>=3, flex)
+        run: conda install -n test -y bison flex
+
+      - name: Build and install the package (+ test deps)
+        run: |
+          python -m pip install --upgrade pip
+          pip install ".[test]"
+
+      - name: Run Python tests
+        run: pytest -v tests/python/

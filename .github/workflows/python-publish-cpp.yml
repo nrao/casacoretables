@@ -1,0 +1,100 @@
+# Build binary wheels (+ sdist) with cibuildwheel and publish to PyPI on release.
+#
+# Standalone (does not call the shared template) so the compiled-package needs
+# are handled directly: bison>=3 / flex are installed inside each build
+# environment (dnf in the manylinux container, brew on macOS), and every wheel
+# is tested against the package's own pytest suite before upload.
+name: Build & Publish to PyPI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:        # allow manual wheel builds (no publish)
+
+jobs:
+  build-wheels:
+    name: wheels (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python (cibuildwheel driver)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install cibuildwheel
+        run: python -m pip install --upgrade pip cibuildwheel==2.21.3
+
+      - name: Build wheels
+        env:
+          CIBW_BUILD: "cp311-* cp312-* cp313-*"
+
+          # Linux: 64-bit manylinux only.
+          CIBW_ARCHS_LINUX: "x86_64"
+          CIBW_SKIP: "*-musllinux_* *-manylinux_i686"
+          CIBW_MANYLINUX_X86_64_IMAGE: "manylinux_2_28"
+          # macOS runner is arm64.
+          CIBW_ARCHS_MACOS: "arm64"
+
+          # Build-time parser generators (bison>=3, flex).
+          CIBW_BEFORE_ALL_LINUX: "dnf install -y bison flex || yum install -y bison flex"
+          CIBW_BEFORE_ALL_MACOS: "brew install bison flex"
+          # Make the brew-installed (keg-only) bison>=3 take precedence over the
+          # macOS system bison 2.3 during the build.
+          CIBW_ENVIRONMENT_MACOS: 'PATH="/opt/homebrew/opt/bison/bin:$PATH"'
+
+          # Test each built wheel against the package's own test suite.
+          CIBW_TEST_REQUIRES: "pytest"
+          CIBW_TEST_COMMAND: "pytest {project}/tests/python"
+        run: python -m cibuildwheel --output-dir wheelhouse
+
+      - name: Upload wheel artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}
+          path: wheelhouse/*.whl
+
+  build-sdist:
+    name: sdist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --upgrade pip build
+      - run: python -m build --sdist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+
+  publish:
+    name: Publish to PyPI
+    needs: [build-wheels, build-sdist]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    environment:
+      name: release
+      url: https://pypi.org/project/casacoretables
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          path: dist
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: dist
+      - name: Publish distribution 📦 to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: "__token__"
+          password: ${{ secrets.PYPI_TOKEN }}
+          # skip-existing: true

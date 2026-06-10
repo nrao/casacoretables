@@ -1,0 +1,47 @@
+# Python tests on Linux.
+#
+# Standalone (does not call the shared template) because casacoretables is a
+# compiled (C++/pybind11) package: it needs bison>=3 and flex at build time,
+# which the pure-Python template does not install.
+name: Linux Tests
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+      - '**.rst'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '**.rst'
+
+jobs:
+  test:
+    name: linux (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # bison>=3 / flex generate the TaQL and Json parsers; the C++ compiler,
+      # CMake and Ninja are provided by the runner / scikit-build-core.
+      - name: Install build tools (bison>=3, flex)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bison flex
+
+      - name: Build and install the package (+ test deps)
+        run: |
+          python -m pip install --upgrade pip
+          pip install ".[test]"
+
+      - name: Run Python tests
+        run: pytest -v tests/python/

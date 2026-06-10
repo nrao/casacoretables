@@ -1,0 +1,23 @@
+# Build output
+/build/
+/build_baseline/
+/dist_wheel/
+/dist/
+*.egg-info/
+_skbuild/
+wheelhouse/
+
+# Compiled extension copied in-place for dev testing
+src/casacoretables/tables/_tables*.so
+src/casacoretables/tables/_tables*.pyd
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# casacore test scratch / table files
+*.tab/
+*_tmp*/
+
+.DS_Store

@@ -1,0 +1,8 @@
+# Lint with Black, using the shared reusable workflow.
+name: Black
+
+on: [push, pull_request]
+
+jobs:
+  call-black:
+    uses: nrao/gh-actions-templates-public/.github/workflows/black-template.yml@main
