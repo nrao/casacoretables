@@ -29,8 +29,7 @@ are intentionally absent: they belong to casacore's `ms` module.
 ## Install
 
 ```bash
-conda install -n <env> bison flex      # build tools (>=3 for bison)
-pip install .
+pip install casacoretables
 ```
 
 ## Use
