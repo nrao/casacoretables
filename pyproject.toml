@@ -25,6 +25,7 @@ classifiers = [
 ]
 dependencies = [
     "numpy>=1.20.0",
+    "pyrap",
 ]
 
 [project.optional-dependencies]
