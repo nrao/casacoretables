@@ -7,7 +7,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "casacoretables"
-version = "0.0.1"
+version = "0.0.2"
 description = "Standalone, minimal-dependency casacore table system with a pybind11 interface"
 readme = "README.md"
 requires-python = ">=3.9"
