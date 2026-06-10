@@ -28,6 +28,7 @@
 from .table import table
 from .tablehelper import _check_key_slice, _do_remove_prefix, _format_cell
 
+
 class tablecolumn:
     """The Python interface to a column in a Casacore table.
 
@@ -67,8 +68,9 @@ class tablecolumn:
 
     def __init__(self, table, columnname):
         if columnname not in table.colnames():
-            raise RuntimeError("Column " + columnname +
-                               " does not exist in table " + table.name())
+            raise RuntimeError(
+                "Column " + columnname + " does not exist in table " + table.name()
+            )
         self._table = table
         self._column = columnname
 
@@ -113,8 +115,7 @@ class tablecolumn:
     def getshapestring(self, startrow=1, nrow=-1, rowincr=1):
         """Get the shapes of all cells in the column in string format.
         (see :func:`table.getcolshapestring`)"""
-        return self._table.getcolshapestring(self._column,
-                                             startrow, nrow, rowincr)
+        return self._table.getcolshapestring(self._column, startrow, nrow, rowincr)
 
     def iscelldefined(self, rownr):
         """Tell if a column cell contains a value.
@@ -144,7 +145,9 @@ class tablecolumn:
     def getcolslice(self, blc, trc, inc=[], startrow=0, nrow=-1, rowincr=1):
         """Get a slice from a table column holding arrays.
         (see :func:`table.getcolslice`)"""
-        return self._table.getcolslice(self._column, blc, trc, inc, startrow, nrow, rowincr)
+        return self._table.getcolslice(
+            self._column, blc, trc, inc, startrow, nrow, rowincr
+        )
 
     def putcell(self, rownr, value):
         """Put a value into one or more table cells.
@@ -169,13 +172,15 @@ class tablecolumn:
     def putcolslice(self, value, blc, trc, inc=[], startrow=0, nrow=-1, rowincr=1):
         """Put into a slice in a table column holding arrays.
         (see :func:`table.putcolslice`)"""
-        return self._table.putcolslice(self._column, value, blc, trc, inc, startrow, nrow, rowincr)
+        return self._table.putcolslice(
+            self._column, value, blc, trc, inc, startrow, nrow, rowincr
+        )
 
     def keywordnames(self):
         """Get the names of all keywords of the column."""
         return self._table.colkeywordnames(self._column)
 
-    def fieldnames(self, keyword=''):
+    def fieldnames(self, keyword=""):
         """Get the names of the fields in a column keyword value.
         (see :func:`table.colfieldnames`)"""
         return self._table.colfieldnames(self._column, keyword)
@@ -215,14 +220,16 @@ class tablecolumn:
         (see :func:`table.getdminfo`)"""
         return self._table.getdminfo(self._column)
 
-    def iter(self, order='', sort=True):
+    def iter(self, order="", sort=True):
         """Return a :class:`tableiter` object on this column."""
         from casacoretables.tables import tableiter
+
         return tableiter(self._table, [self._column], order, sort)
 
     def index(self, sort=True):
         """Return a :class:`tableindex` object on this column."""
         from casacoretables.tables import tableindex
+
         return tableindex(self._table, [self._column], sort)
 
     def __len__(self):
@@ -257,14 +264,14 @@ class tablecolumn:
         except:
             pass
         # _ or keys means all keywords.
-        if name in ('_', 'keys'):
+        if name in ("_", "keys"):
             return self.getkeywords()
         # Unknown name.
         raise AttributeError("table has no attribute/keyword " + name)
 
     def __getitem__(self, key):
         """Get the values from one or more rows."""
-        sei = _check_key_slice(key, self._table.nrows(), 'tablecolumn')
+        sei = _check_key_slice(key, self._table.nrows(), "tablecolumn")
         if len(sei) == 1:
             # A single row.
             return self.getcell(sei[0])
@@ -279,7 +286,7 @@ class tablecolumn:
         return result
 
     def __setitem__(self, key, value):
-        sei = _check_key_slice(key, self._table.nrows(), 'tablecolumn')
+        sei = _check_key_slice(key, self._table.nrows(), "tablecolumn")
         if len(sei) == 1:
             # A single row.
             return self.putcell(sei[0], value)
@@ -295,8 +302,7 @@ class tablecolumn:
         else:
             # Each row has its own value.
             if len(value) != sei[1]:
-                raise RuntimeError(
-                    "tablecolumn slice length differs from value length")
+                raise RuntimeError("tablecolumn slice length differs from value length")
             for val in value:
                 self.putcell(rownr, val)
                 rownr += sei[2]
@@ -304,34 +310,37 @@ class tablecolumn:
 
     def _repr_html_(self):
         """Give a nice representation of columns in notebooks."""
-        out="<table class='taqltable'>\n"
+        out = "<table class='taqltable'>\n"
 
         # Print column name (not if it is auto-generated)
-        if not(self.name()[:4]=="Col_"):
-            out+="<tr>"
-            out+="<th><b>"+self.name()+"</b></th>"
-            out+="</tr>"
+        if not (self.name()[:4] == "Col_"):
+            out += "<tr>"
+            out += "<th><b>" + self.name() + "</b></th>"
+            out += "</tr>"
 
-        cropped=False
-        rowcount=0
-        colkeywords=self.getkeywords()
+        cropped = False
+        rowcount = 0
+        colkeywords = self.getkeywords()
         for row in self:
-            out +="\n<tr>"
+            out += "\n<tr>"
             out += "<td>" + _format_cell(row, colkeywords) + "</td>\n"
             out += "</tr>\n"
-            rowcount+=1
-            out+="\n"
-            if rowcount>=20:
-                cropped=True
+            rowcount += 1
+            out += "\n"
+            if rowcount >= 20:
+                cropped = True
                 break
 
-        if out[-2:]=="\n\n":
-            out=out[:-1]
+        if out[-2:] == "\n\n":
+            out = out[:-1]
 
-        out+="</table>"
+        out += "</table>"
 
         if cropped:
-            out+="<p style='text-align:center'>("+str(self.nrows()-20)+" more rows)</p>\n"
+            out += (
+                "<p style='text-align:center'>("
+                + str(self.nrows() - 20)
+                + " more rows)</p>\n"
+            )
 
         return out
-

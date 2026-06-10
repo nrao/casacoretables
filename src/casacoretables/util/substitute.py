@@ -25,12 +25,13 @@
 
 import numpy as np
 
-__all__ = ['getlocals', 'getvariable', 'substitute']
+__all__ = ["getlocals", "getvariable", "substitute"]
 
 
 def getlocals(back=2):
     """Get the local variables some levels back (-1 is top)."""
     import inspect
+
     fr = inspect.currentframe()
     try:
         while fr and back != 0:
@@ -45,6 +46,7 @@ def getlocals(back=2):
 def getvariable(name):
     """Get the value of a local variable somewhere in the call stack."""
     import inspect
+
     fr = inspect.currentframe()
     try:
         while fr:
@@ -127,11 +129,11 @@ def substitute(s, objlist=(), globals={}, locals={}):
     backslash = False
     dollar = False
     nparen = 0
-    name = ''
-    evalstr = ''
+    name = ""
+    evalstr = ""
     squote = False
     dquote = False
-    out = ''
+    out = ""
     # Loop through the entire string.
     for tmp in s:
         if backslash:
@@ -141,17 +143,17 @@ def substitute(s, objlist=(), globals={}, locals={}):
         # If a dollar is found, we might have a name or expression.
         # Alphabetics and underscore are always part of name.
         if dollar and nparen == 0:
-            if tmp == '_' or ('a' <= tmp <= 'z') or ('A' <= tmp <= 'Z'):
+            if tmp == "_" or ("a" <= tmp <= "z") or ("A" <= tmp <= "Z"):
                 name += tmp
                 continue
             # Numerics are only part if not first character.
-            if '0' <= tmp <= '9' and name != '':
+            if "0" <= tmp <= "9" and name != "":
                 name += tmp
                 continue
             # $( indicates the start of an expression to evaluate.
-            if tmp == '(' and name == '':
+            if tmp == "(" and name == "":
                 nparen = 1
-                evalstr = ''
+                evalstr = ""
                 continue
             # End of name found. Try to substitute.
             out += substitutename(name, objlist, globals, locals)
@@ -166,9 +168,9 @@ def substitute(s, objlist=(), globals={}, locals={}):
             # Count the number of balanced parentheses
             # (outside quoted strings) in the subexpression.
             if nparen > 0:
-                if tmp == '(':
+                if tmp == "(":
                     nparen += 1
-                elif tmp == ')':
+                elif tmp == ")":
                     nparen -= 1
                     if nparen == 0:
                         # The last closing parenthese is found.
@@ -180,9 +182,9 @@ def substitute(s, objlist=(), globals={}, locals={}):
                 continue
             # Set a switch if we have a dollar (outside quoted
             # and eval strings).
-            if tmp == '$':
+            if tmp == "$":
                 dollar = True
-                name = ''
+                name = ""
                 continue
         # No special character; add it to output or evalstr.
         # Set a switch if we have a backslash.
@@ -190,7 +192,7 @@ def substitute(s, objlist=(), globals={}, locals={}):
             out += tmp
         else:
             evalstr += tmp
-        if tmp == '\\':
+        if tmp == "\\":
             backslash = True
 
         # The entire string has been handled.
@@ -200,7 +202,7 @@ def substitute(s, objlist=(), globals={}, locals={}):
         out += substitutename(name, objlist, globals, locals)
     else:
         if nparen > 0:
-            out += '$(' + evalstr
+            out += "$(" + evalstr
     return out
 
 
@@ -209,7 +211,7 @@ def substitute(s, objlist=(), globals={}, locals={}):
 def substitutename(name, objlist, globals, locals):
     # If the name is empty, return a single dollar.
     if len(name) == 0:
-        return '$'
+        return "$"
 
     # First try as a single variable; otherwise as an expression.
     try:
@@ -217,14 +219,14 @@ def substitutename(name, objlist, globals, locals):
         if v is None:
             v = eval(name, globals, locals)
     except NameError:
-        return '$' + name
+        return "$" + name
 
     # See if the resulting value is one of the given special types.
     try:
         for objtype, objstr, objs in objlist:
             if isinstance(v, objtype):
                 objs += [v]
-                return '$' + objstr + str(len(objs))
+                return "$" + objstr + str(len(objs))
     except:
         pass
 
@@ -240,23 +242,23 @@ def substituteexpr(expr, globals={}, locals={}):
         v = substitutevar(res)
     except:
         # If the expr is undefined, return the original.
-        v = '$(' + expr + ')'
+        v = "$(" + expr + ")"
     return str(v)
 
 
 # Substitute a value.
 def substitutevar(v):
-    out = ''
+    out = ""
     if isinstance(v, tuple) or isinstance(v, list) or isinstance(v, np.ndarray):
-        out = '['
+        out = "["
         first = True
         for tmp in v:
             if first:
                 first = False
             else:
-                out += ','
+                out += ","
             out += substituteonevar(tmp)
-        out += ']'
+        out += "]"
     else:
         out = substituteonevar(v)
     return out
@@ -272,8 +274,8 @@ def substituteonevar(v):
     # Take care we have enough precision.
     if isinstance(v, bool):
         if v:
-            return 'T'
-        return 'F'
+            return "T"
+        return "F"
     return str(v)
 
 

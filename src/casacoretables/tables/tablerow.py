@@ -30,12 +30,12 @@ from ._tables import TableRow
 
 from .tablehelper import _check_key_slice
 
-
 # A normal tablerow object keeps a reference to a table object to be able
 # to know the actual number of rows.
 # However, a mutual dependency is created when doing that for the tablerow
 # object inside the table object.
 # Therefore an intermediate _tablerow exists to be used in class table.
+
 
 class _tablerow(TableRow):
     def __init__(self, table, columnnames, exclude=False):
@@ -63,7 +63,7 @@ class _tablerow(TableRow):
         self._put(rownr, value, matchingfields)
 
     def _getitem(self, key, nrows):
-        sei = _check_key_slice(key, nrows, 'tablerow')
+        sei = _check_key_slice(key, nrows, "tablerow")
         rownr = sei[0]
         if len(sei) == 1:
             return self.get(rownr)
@@ -76,7 +76,7 @@ class _tablerow(TableRow):
         return result
 
     def _setitem(self, key, value, nrows):
-        sei = _check_key_slice(key, nrows, 'tablerow')
+        sei = _check_key_slice(key, nrows, "tablerow")
         rownr = sei[0]
         if len(sei) == 1:
             return self.put(rownr, value)

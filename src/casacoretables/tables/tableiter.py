@@ -52,12 +52,12 @@ class tableiter(TableIter):
 
     """
 
-    def __init__(self, table, columnnames, order='', sort=True):
+    def __init__(self, table, columnnames, order="", sort=True):
         st = sort
         if isinstance(sort, bool):
-            st = 'heapsort'
+            st = "heapsort"
             if not sort:
-                st = 'nosort'
+                st = "nosort"
         TableIter.__init__(self, table, columnnames, order, st)
 
     def __iter__(self):

@@ -33,7 +33,7 @@ import re
 # table.__str__; import it lazily so the package works without it.
 try:
     from ..quanta import quantity
-except ImportError:                       # pragma: no cover
+except ImportError:  # pragma: no cover
     quantity = None
 
 
@@ -42,15 +42,15 @@ except ImportError:                       # pragma: no cover
 # Therefore it is passed around as a string with a special prefix.
 def _add_prefix(name):
     """Add the prefix 'Table: ' to a table name to get a specific keyword value."""
-    return 'Table: ' + name
+    return "Table: " + name
 
 
 def _do_remove_prefix(name):
     """Strip the possible prefix 'Table: ' from a table name."""
     res = name
     if isinstance(res, str):
-        if res.find('Table: ') == 0:
-            res = res.replace('Table: ', '', 1)
+        if res.find("Table: ") == 0:
+            res = res.replace("Table: ", "", 1)
     return res
 
 
@@ -119,18 +119,18 @@ def _check_key_slice(key, nrows, name):
 # as expected by the table code.
 def _value_type_name(value):
     if isinstance(value, bool):
-        return 'boolean'
+        return "boolean"
     if isinstance(value, int):
-        return 'integer'
+        return "integer"
     if isinstance(value, float):
-        return 'double'
+        return "double"
     if isinstance(value, complex):
-        return 'dcomplex'
+        return "dcomplex"
     if isinstance(value, str):
-        return 'string'
+        return "string"
     if isinstance(value, dict):
-        return 'record'
-    return 'unknown'
+        return "record"
+    return "unknown"
 
 
 def _format_date(val, unit):
@@ -145,11 +145,11 @@ def _format_date(val, unit):
     """
     if quantity is None:
         return str(val)
-    if val == numpy.floor(val) and unit == 'd':
+    if val == numpy.floor(val) and unit == "d":
         # Do not show time part if 0
-        return quantity(val, unit).formatted('YMD_ONLY')
+        return quantity(val, unit).formatted("YMD_ONLY")
     else:
-        return quantity(val, unit).formatted('DMY')
+        return quantity(val, unit).formatted("DMY")
 
 
 def _format_quantum(val, unit):
@@ -167,8 +167,8 @@ def _format_quantum(val, unit):
     if quantity is None:
         return str(val)
     q = quantity(val, unit)
-    if q.canonical().get_unit() in ['rad', 's']:
-        return quantity(val, 'm').formatted()[:-1] + unit
+    if q.canonical().get_unit() in ["rad", "s"]:
+        return quantity(val, "m").formatted()[:-1] + unit
     else:
         return q.formatted()
 
@@ -184,69 +184,94 @@ def _format_cell(val, colkeywords):
 
     # String arrays are returned as dict, undo that for printing
     if isinstance(val, dict):
-        tmpdict = numpy.array(val['array'])
-        tmpdict.reshape(val['shape'])
+        tmpdict = numpy.array(val["array"])
+        tmpdict.reshape(val["shape"])
         # Leave out quotes around strings
-        numpy.set_printoptions(formatter={'all': lambda x: str(x)})
-        out += numpy.array2string(tmpdict, separator=', ')
+        numpy.set_printoptions(formatter={"all": lambda x: str(x)})
+        out += numpy.array2string(tmpdict, separator=", ")
         # Revert previous numpy print options
         numpy.set_printoptions(formatter=None)
     else:
-        valtype = 'other'
+        valtype = "other"
 
         # Check if the column unit is like 'm' or ['m','m','m']
-        singleUnit = ('QuantumUnits' in colkeywords and
-                      (numpy.array(colkeywords['QuantumUnits']) == numpy.array(colkeywords['QuantumUnits'])[0]).all())
-        if colkeywords.get('MEASINFO', {}).get('type') == 'epoch' and singleUnit and quantity is not None:
+        singleUnit = (
+            "QuantumUnits" in colkeywords
+            and (
+                numpy.array(colkeywords["QuantumUnits"])
+                == numpy.array(colkeywords["QuantumUnits"])[0]
+            ).all()
+        )
+        if (
+            colkeywords.get("MEASINFO", {}).get("type") == "epoch"
+            and singleUnit
+            and quantity is not None
+        ):
             # Format a date/time. Use quanta for scalars, use numpy for array logic around it
             # (quanta does not support higher dimensional arrays)
-            valtype = 'epoch'
+            valtype = "epoch"
             if isinstance(val, numpy.ndarray):
-                numpy.set_printoptions(formatter={'all': lambda x: _format_date(x, colkeywords['QuantumUnits'][0])})
-                out += numpy.array2string(val, separator=', ')
+                numpy.set_printoptions(
+                    formatter={
+                        "all": lambda x: _format_date(x, colkeywords["QuantumUnits"][0])
+                    }
+                )
+                out += numpy.array2string(val, separator=", ")
                 numpy.set_printoptions(formatter=None)
             else:
-                out += _format_date(val, colkeywords['QuantumUnits'][0])
-        elif colkeywords.get('MEASINFO', {}).get('type') == 'direction' and singleUnit and val.shape == (1, 2) and quantity is not None:
+                out += _format_date(val, colkeywords["QuantumUnits"][0])
+        elif (
+            colkeywords.get("MEASINFO", {}).get("type") == "direction"
+            and singleUnit
+            and val.shape == (1, 2)
+            and quantity is not None
+        ):
             # Format one direction. TODO: extend to array of directions
-            valtype = 'direction'
+            valtype = "direction"
             out += "["
-            part = quantity(val[0, 0], 'rad').formatted("TIME", precision=9)
-            part = re.sub(r'(\d+):(\d+):(.*)', r'\1h\2m\3', part)
+            part = quantity(val[0, 0], "rad").formatted("TIME", precision=9)
+            part = re.sub(r"(\d+):(\d+):(.*)", r"\1h\2m\3", part)
             out += part + ", "
-            part = quantity(val[0, 1], 'rad').formatted("ANGLE", precision=9)
-            part = re.sub(r'(\d+)\.(\d+)\.(.*)', r'\1d\2m\3', part)
+            part = quantity(val[0, 1], "rad").formatted("ANGLE", precision=9)
+            part = re.sub(r"(\d+)\.(\d+)\.(.*)", r"\1d\2m\3", part)
             out += part + "]"
         elif isinstance(val, numpy.ndarray) and singleUnit:
             # Format any array with units
-            valtype = 'quanta'
-            numpy.set_printoptions(formatter={'all': lambda x: _format_quantum(x, colkeywords['QuantumUnits'][0])})
-            out += numpy.array2string(val, separator=', ')
+            valtype = "quanta"
+            numpy.set_printoptions(
+                formatter={
+                    "all": lambda x: _format_quantum(x, colkeywords["QuantumUnits"][0])
+                }
+            )
+            out += numpy.array2string(val, separator=", ")
             numpy.set_printoptions(formatter=None)
         elif isinstance(val, numpy.ndarray):
-            valtype = 'other'
+            valtype = "other"
             # Undo quotes around strings
-            numpy.set_printoptions(formatter={'all': lambda x: str(x)})
-            out += numpy.array2string(val, separator=', ')
+            numpy.set_printoptions(formatter={"all": lambda x: str(x)})
+            out += numpy.array2string(val, separator=", ")
             numpy.set_printoptions(formatter=None)
         elif singleUnit:
-            valtype = 'onequantum'
-            out += _format_quantum(val, colkeywords['QuantumUnits'][0])
+            valtype = "onequantum"
+            out += _format_quantum(val, colkeywords["QuantumUnits"][0])
         else:
-            valtype = 'other'
+            valtype = "other"
             out += str(val)
 
-    if 'QuantumUnits' in colkeywords and valtype == 'other':
+    if "QuantumUnits" in colkeywords and valtype == "other":
         # Print units if they haven't been taken care of
-        if not (numpy.array(colkeywords['QuantumUnits']) == numpy.array(colkeywords['QuantumUnits'])[0]).all():
+        if not (
+            numpy.array(colkeywords["QuantumUnits"])
+            == numpy.array(colkeywords["QuantumUnits"])[0]
+        ).all():
             # Multiple different units for element in an array.
             # For now, just print the units and let the user figure out what it means
-            out += " " + str(colkeywords['QuantumUnits'])
+            out += " " + str(colkeywords["QuantumUnits"])
         else:
-            out += " " + colkeywords['QuantumUnits'][0]
+            out += " " + colkeywords["QuantumUnits"][0]
 
     # Numpy sometimes adds double newlines, don't do that
-    out = out.replace('\n\n', '\n')
+    out = out.replace("\n\n", "\n")
     return out
 
 

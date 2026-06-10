@@ -38,8 +38,7 @@ Several utility functions exist. Important ones are:
 
 from ._tables import Table
 
-from .tablehelper import (_add_prefix, _remove_prefix, _do_remove_prefix,
-                          _format_row)
+from .tablehelper import _add_prefix, _remove_prefix, _do_remove_prefix, _format_row
 
 # NOTE: MeasurementSet helpers (default_ms / default_ms_subtable and the
 # _required_ms_desc / _complete_ms_desc descriptors) are intentionally not
@@ -65,7 +64,7 @@ def _as_corner(value):
 
 
 # Execute a TaQL command on a table.
-def taql(command, style='Python', tables=[], globals={}, locals={}):
+def taql(command, style="Python", tables=[], globals={}, locals={}):
     """Execute a TaQL command and return a table object.
 
     A `TaQL <../../doc/199.html>`_
@@ -108,22 +107,22 @@ def taql(command, style='Python', tables=[], globals={}, locals={}):
         tabs += [tab]
     try:
         import casacoretables.util
+
         if len(locals) == 0:
             # local variables in caller are 3 levels up from getlocals
             locals = casacoretables.util.getlocals(3)
-        cmd = casacoretables.util.substitute(cmd, [(table, '', tabs)],
-                                       globals, locals)
+        cmd = casacoretables.util.substitute(cmd, [(table, "", tabs)], globals, locals)
     except Exception:
         pass
     if style:
-        cmd = 'using style ' + style + ' ' + cmd
+        cmd = "using style " + style + " " + cmd
     tab = table(cmd, tabs, _oper=2)
     result = tab._getcalcresult()
     # If result is empty, it was a normal TaQL command resulting in a table.
     # Otherwise it is a record containing calc values.
     if len(result) == 0:
         return tab
-    return result['values']
+    return result["values"]
 
 
 # alias
@@ -278,18 +277,41 @@ class table(Table):
 
     """
 
-    def __init__(self, tablename, tabledesc=False, nrow=0, readonly=True,
-                 lockoptions='default', ack=True, dminfo={}, endian='aipsrc',
-                 memorytable=False, concatsubtables=[],
-                 _columnnames=[], _datatypes=[],
-                 _oper=0, _delete=False):
+    def __init__(
+        self,
+        tablename,
+        tabledesc=False,
+        nrow=0,
+        readonly=True,
+        lockoptions="default",
+        ack=True,
+        dminfo={},
+        endian="aipsrc",
+        memorytable=False,
+        concatsubtables=[],
+        _columnnames=[],
+        _datatypes=[],
+        _oper=0,
+        _delete=False,
+    ):
         """Open or create a table."""
         if _oper == 1:
             # This is the readascii constructor.
             tabname = _remove_prefix(tablename)
-            Table.__init__(self, tabname, tabledesc, nrow, readonly,
-                           lockoptions, ack, dminfo, endian, memorytable,
-                           _columnnames, _datatypes)
+            Table.__init__(
+                self,
+                tabname,
+                tabledesc,
+                nrow,
+                readonly,
+                lockoptions,
+                ack,
+                dminfo,
+                endian,
+                memorytable,
+                _columnnames,
+                _datatypes,
+            )
         elif _oper == 2:
             # This is the query or calc constructor.
             Table.__init__(self, tablename, tabledesc)
@@ -309,57 +331,80 @@ class table(Table):
             tabname = _remove_prefix(tablename)
             lockopt = lockoptions
             if isinstance(lockoptions, str):
-                lockopt = {'option': lockoptions}
+                lockopt = {"option": lockoptions}
             if isinstance(tabledesc, dict):
                 # Create a new table.
-                memtype = 'plain'
-                if (memorytable):
-                    memtype = 'memory'
-                Table.__init__(self, tabname, lockopt, endian,
-                               memtype, nrow, tabledesc, dminfo)
+                memtype = "plain"
+                if memorytable:
+                    memtype = "memory"
+                Table.__init__(
+                    self, tabname, lockopt, endian, memtype, nrow, tabledesc, dminfo
+                )
                 if ack:
-                    print('Successful creation of',
-                          lockopt['option'] + '-locked table',
-                          tabname + ':',
-                          self.ncols(), 'columns,',
-                          self.nrows(), 'rows')
+                    print(
+                        "Successful creation of",
+                        lockopt["option"] + "-locked table",
+                        tabname + ":",
+                        self.ncols(),
+                        "columns,",
+                        self.nrows(),
+                        "rows",
+                    )
             else:
                 # Deal with existing tables.
                 if not tabname:
                     raise ValueError("No tables or names given")
                 # Open an existing table
                 opt = 1
-                typstr = 'readonly'
+                typstr = "readonly"
                 if not readonly:
-                    typstr = 'read/write'
+                    typstr = "read/write"
                     opt = 5
                     if _delete:
                         opt = 6
                 if isinstance(tabname, str):
                     Table.__init__(self, tabname, lockopt, opt)
                     if ack:
-                        print('Successful', typstr, 'open of',
-                              lockopt['option'] + '-locked table',
-                              tabname + ':',
-                              self.ncols(), 'columns,',
-                              self.nrows(), 'rows')
+                        print(
+                            "Successful",
+                            typstr,
+                            "open of",
+                            lockopt["option"] + "-locked table",
+                            tabname + ":",
+                            self.ncols(),
+                            "columns,",
+                            self.nrows(),
+                            "rows",
+                        )
                 elif isinstance(tabname[0], str):
                     # Concatenate and open named tables.
-                    Table.__init__(self, tabname, concatsubtables,
-                                   lockopt, opt)
+                    Table.__init__(self, tabname, concatsubtables, lockopt, opt)
                     if ack:
-                        print('Successful', typstr, 'open of',
-                              lockopt['option'] +
-                              '-locked concatenated tables',
-                              tabname, ':', self.ncols(), 'columns,',
-                              self.nrows(), 'rows')
+                        print(
+                            "Successful",
+                            typstr,
+                            "open of",
+                            lockopt["option"] + "-locked concatenated tables",
+                            tabname,
+                            ":",
+                            self.ncols(),
+                            "columns,",
+                            self.nrows(),
+                            "rows",
+                        )
                 else:
                     # Concatenate already open tables.
                     Table.__init__(self, tabname, concatsubtables, 0, 0, 0)
                     if ack:
-                        print('Successful virtual concatenation of',
-                              len(tabname), 'tables:', self.ncols(),
-                              'columns,', self.nrows(), 'rows')
+                        print(
+                            "Successful virtual concatenation of",
+                            len(tabname),
+                            "tables:",
+                            self.ncols(),
+                            "columns,",
+                            self.nrows(),
+                            "rows",
+                        )
         # Create a row object for this table.
         self._makerow()
 
@@ -374,13 +419,18 @@ class table(Table):
     def _makerow(self):
         """Internal method to make its tablerow object."""
         from .tablerow import _tablerow
+
         self._row = _tablerow(self, [])
 
     def __str__(self):
         """Return the table name and the basic statistics"""
-        return (_add_prefix(self.name()) + "\n%d rows" % self.nrows() +
-                "\n" + "%d columns: " % len(self.colnames()) +
-                " ".join(self.colnames()))
+        return (
+            _add_prefix(self.name())
+            + "\n%d rows" % self.nrows()
+            + "\n"
+            + "%d columns: " % len(self.colnames())
+            + " ".join(self.colnames())
+        )
 
     def __len__(self):
         """Return the number of rows in the table."""
@@ -423,7 +473,7 @@ class table(Table):
         except Exception:
             pass
         # _ or keys means all keywords.
-        if name == '_' or name == 'keys':
+        if name == "_" or name == "keys":
             return self.getkeywords()
         # Unknown name.
         raise AttributeError("table has no attribute/column/keyword " + name)
@@ -455,6 +505,7 @@ class table(Table):
 
         """
         from .tablecolumn import tablecolumn
+
         return tablecolumn(self, columnname)
 
     def row(self, columnnames=[], exclude=False):
@@ -466,9 +517,10 @@ class table(Table):
 
         """
         from .tablerow import tablerow
+
         return tablerow(self, columnnames, exclude)
 
-    def iter(self, columnnames, order='', sort=True):
+    def iter(self, columnnames, order="", sort=True):
         """Return a tableiter object.
 
         :class:`tableiter` lets one iterate over a table by returning in each
@@ -491,6 +543,7 @@ class table(Table):
 
         """
         from .tableiter import tableiter
+
         return tableiter(self, columnnames, order, sort)
 
     def index(self, columnnames, sort=True):
@@ -510,6 +563,7 @@ class table(Table):
 
         """
         from .tableindex import tableindex
+
         return tableindex(self, columnnames, sort)
 
     def flush(self, recursive=False):
@@ -543,8 +597,15 @@ class table(Table):
         """Flush and close the table which invalidates the table object."""
         self.close()
 
-    def toascii(self, asciifile, headerfile='', columnnames=(), sep=' ',
-                precision=(), usebrackets=True):
+    def toascii(
+        self,
+        asciifile,
+        headerfile="",
+        columnnames=(),
+        sep=" ",
+        precision=(),
+        usebrackets=True,
+    ):
         """Write the table in ASCII format.
 
         It is approximately the inverse of the from-ASCII-contructor.
@@ -585,8 +646,9 @@ class table(Table):
           t1.toascii ('3c343.txt')               # write selection as ASCII
 
         """
-        msg = self._toascii(asciifile, headerfile, columnnames, sep,
-                            precision, usebrackets)
+        msg = self._toascii(
+            asciifile, headerfile, columnnames, sep, precision, usebrackets
+        )
         if len(msg) > 0:
             print(msg)
 
@@ -599,8 +661,16 @@ class table(Table):
         """
         self._rename(newtablename)
 
-    def copy(self, newtablename, deep=False, valuecopy=False, dminfo={},
-             endian='aipsrc', memorytable=False, copynorows=False):
+    def copy(
+        self,
+        newtablename,
+        deep=False,
+        valuecopy=False,
+        dminfo={},
+        endian="aipsrc",
+        memorytable=False,
+        copynorows=False,
+    ):
         """Copy the table and return a table object for the copy.
 
         It copies all data in the columns and keywords.
@@ -637,8 +707,9 @@ class table(Table):
           t2 = t.copy ('new.tab', True, True)    # reorganize storage
 
         """
-        t = self._copy(newtablename, memorytable, deep, valuecopy,
-                       endian, dminfo, copynorows)
+        t = self._copy(
+            newtablename, memorytable, deep, valuecopy, endian, dminfo, copynorows
+        )
         # copy returns a Table object, so turn that into table.
         return table(t, _oper=3)
 
@@ -821,7 +892,7 @@ class table(Table):
     def isvarcol(self, columnname):
         """Tell if the column holds variable shaped arrays."""
         desc = self.getcoldesc(columnname)
-        return 'ndim' in desc and 'shape' not in desc
+        return "ndim" in desc and "shape" not in desc
 
     def coldatatype(self, columnname):
         """Get the data type of a column.
@@ -882,8 +953,7 @@ class table(Table):
         """
         self._removerows(rownrs)
 
-    def getcolshapestring(self, columnname,
-                          startrow=0, nrow=-1, rowincr=1):
+    def getcolshapestring(self, columnname, startrow=0, nrow=-1, rowincr=1):
         """Get the shapes of all cells in the column in string format.
 
         It returns the shape in a string like [10,20,30].
@@ -895,9 +965,9 @@ class table(Table):
         rows (default all), and row stride (default 1).
 
         """
-        return self._getcolshapestring(columnname,
-                                       startrow, nrow, rowincr,
-                                       True)   # reverse axes
+        return self._getcolshapestring(
+            columnname, startrow, nrow, rowincr, True
+        )  # reverse axes
 
     def iscelldefined(self, columnname, rownr):
         """Tell if a column cell contains a value.
@@ -934,8 +1004,9 @@ class table(Table):
 
         """
         if not nparray.flags.c_contiguous or nparray.size == 0:
-            raise ValueError("Argument 'nparray' has to be a contiguous " +
-                             "numpy array")
+            raise ValueError(
+                "Argument 'nparray' has to be a contiguous " + "numpy array"
+            )
         # See getcolnp for why we copy in rather than using the SHARE-into-buffer
         # path (self._getcellvh).
         nparray[...] = self._getcell(columnname, rownr)
@@ -953,9 +1024,9 @@ class table(Table):
         Note that trc is inclusive (unlike python indexing).
 
         """
-        return self._getcellslice(columnname, rownr,
-                                  _as_corner(blc), _as_corner(trc),
-                                  _as_corner(inc))
+        return self._getcellslice(
+            columnname, rownr, _as_corner(blc), _as_corner(trc), _as_corner(inc)
+        )
 
     def getcellslicenp(self, columnname, nparray, rownr, blc, trc, inc=[]):
         """Get a slice from a column cell into the given numpy array.
@@ -973,8 +1044,9 @@ class table(Table):
 
         """
         if not nparray.flags.c_contiguous or nparray.size == 0:
-            raise ValueError("Argument 'nparray' has to be a contiguous " +
-                             "numpy array")
+            raise ValueError(
+                "Argument 'nparray' has to be a contiguous " + "numpy array"
+            )
         # See getcolnp for why we copy in rather than using the SHARE-into-buffer
         # path (self._getcellslicevh).
         nparray[...] = self.getcellslice(columnname, rownr, blc, trc, inc)
@@ -1019,8 +1091,9 @@ class table(Table):
 
         """
         if (not nparray.flags.c_contiguous) or nparray.size == 0:
-            raise ValueError("Argument 'nparray' has to be a contiguous " +
-                             "numpy array")
+            raise ValueError(
+                "Argument 'nparray' has to be a contiguous " + "numpy array"
+            )
         # Populate `nparray` by copying in the column data, rather than letting
         # casacore write directly into the (SHARE-wrapped) numpy buffer via
         # self._getcolvh. That zero-copy in-place write is not reliably observed
@@ -1043,8 +1116,7 @@ class table(Table):
         """
         return self._getvarcol(columnname, startrow, nrow, rowincr)
 
-    def getcolslice(self, columnname, blc, trc, inc=[],
-                    startrow=0, nrow=-1, rowincr=1):
+    def getcolslice(self, columnname, blc, trc, inc=[], startrow=0, nrow=-1, rowincr=1):
         """Get a slice from a table column holding arrays.
 
         The slice in each array is given by blc, trc, and inc
@@ -1056,11 +1128,19 @@ class table(Table):
         cells. The other axes are the array axes.
 
         """
-        return self._getcolslice(columnname, _as_corner(blc), _as_corner(trc),
-                                 _as_corner(inc), startrow, nrow, rowincr)
+        return self._getcolslice(
+            columnname,
+            _as_corner(blc),
+            _as_corner(trc),
+            _as_corner(inc),
+            startrow,
+            nrow,
+            rowincr,
+        )
 
-    def getcolslicenp(self, columnname, nparray, blc, trc, inc=[],
-                      startrow=0, nrow=-1, rowincr=1):
+    def getcolslicenp(
+        self, columnname, nparray, blc, trc, inc=[], startrow=0, nrow=-1, rowincr=1
+    ):
         """Get a slice from a table column into the given numpy array.
 
         The numpy array has to be C-contiguous with a shape matching the
@@ -1076,12 +1156,14 @@ class table(Table):
 
         """
         if not nparray.flags.c_contiguous or nparray.size == 0:
-            raise ValueError("Argument 'nparray' has to be a contiguous "
-                             + "numpy array")
+            raise ValueError(
+                "Argument 'nparray' has to be a contiguous " + "numpy array"
+            )
         # See getcolnp for why we copy in rather than using the SHARE-into-buffer
         # path (self._getcolslicevh).
-        nparray[...] = self.getcolslice(columnname, blc, trc, inc,
-                                        startrow, nrow, rowincr)
+        nparray[...] = self.getcolslice(
+            columnname, blc, trc, inc, startrow, nrow, rowincr
+        )
         return nparray
 
     def putcell(self, columnname, rownr, value):
@@ -1123,8 +1205,9 @@ class table(Table):
         array. The shape of the array to put has to match the slice shape.
 
         """
-        self._putcellslice(columnname, rownr, value,
-                           _as_corner(blc), _as_corner(trc), _as_corner(inc))
+        self._putcellslice(
+            columnname, rownr, value, _as_corner(blc), _as_corner(trc), _as_corner(inc)
+        )
 
     def putcol(self, columnname, value, startrow=0, nrow=-1, rowincr=1):
         """Put an entire column or part of it.
@@ -1151,15 +1234,24 @@ class table(Table):
         """
         self._putvarcol(columnname, startrow, nrow, rowincr, value)
 
-    def putcolslice(self, columnname, value, blc, trc, inc=[],
-                    startrow=0, nrow=-1, rowincr=1):
+    def putcolslice(
+        self, columnname, value, blc, trc, inc=[], startrow=0, nrow=-1, rowincr=1
+    ):
         """Put into a slice in a table column holding arrays.
 
         Its arguments are the same as for getcolslice and putcellslice.
 
         """
-        self._putcolslice(columnname, value, _as_corner(blc), _as_corner(trc),
-                          _as_corner(inc), startrow, nrow, rowincr)
+        self._putcolslice(
+            columnname,
+            value,
+            _as_corner(blc),
+            _as_corner(trc),
+            _as_corner(inc),
+            startrow,
+            nrow,
+            rowincr,
+        )
 
     def addcols(self, desc, dminfo={}, addtoparent=True):
         """Add one or more columns.
@@ -1199,14 +1291,15 @@ class table(Table):
         """
         tdesc = desc
         # Create a tabdesc if only a coldesc is given.
-        if 'name' in desc:
+        if "name" in desc:
             import casacoretables.tables.tableutil as pt
-            if len(desc) == 2 and 'desc' in desc:
+
+            if len(desc) == 2 and "desc" in desc:
                 # Given as output from makecoldesc
                 tdesc = pt.maketabdesc(desc)
-            elif 'valueType' in desc:
+            elif "valueType" in desc:
                 # Given as output of getcoldesc (with a name field added)
-                cd = pt.makecoldesc(desc['name'], desc)
+                cd = pt.makecoldesc(desc["name"], desc)
                 tdesc = pt.maketabdesc(cd)
         self._addcols(tdesc, dminfo, addtoparent)
         self._makerow()
@@ -1237,13 +1330,13 @@ class table(Table):
 
     def keywordnames(self):
         """Get the names of all table keywords."""
-        return self._getfieldnames('', '', -1)
+        return self._getfieldnames("", "", -1)
 
     def colkeywordnames(self, columnname):
         """Get the names of all keywords of a column."""
-        return self._getfieldnames(columnname, '', -1)
+        return self._getfieldnames(columnname, "", -1)
 
-    def fieldnames(self, keyword=''):
+    def fieldnames(self, keyword=""):
         """Get the names of the fields in a table keyword value.
 
         The value of a keyword can be a struct (python dict). This method
@@ -1261,11 +1354,11 @@ class table(Table):
 
         """
         if isinstance(keyword, str):
-            return self._getfieldnames('', keyword, -1)
+            return self._getfieldnames("", keyword, -1)
         else:
-            return self._getfieldnames('', '', keyword)
+            return self._getfieldnames("", "", keyword)
 
-    def colfieldnames(self, columnname, keyword=''):
+    def colfieldnames(self, columnname, keyword=""):
         """Get the names of the fields in a column keyword value.
 
         The value of a keyword can be a struct (python dict). This method
@@ -1285,7 +1378,7 @@ class table(Table):
         if isinstance(keyword, str):
             return self._getfieldnames(columnname, keyword, -1)
         else:
-            return self._getfieldnames(columnname, '', keyword)
+            return self._getfieldnames(columnname, "", keyword)
 
     def getkeyword(self, keyword):
         """Get the value of a table keyword.
@@ -1311,9 +1404,9 @@ class table(Table):
 
         """
         if isinstance(keyword, str):
-            return self._getkeyword('', keyword, -1)
+            return self._getkeyword("", keyword, -1)
         else:
-            return self._getkeyword('', '', keyword)
+            return self._getkeyword("", "", keyword)
 
     def getcolkeyword(self, columnname, keyword):
         """Get the value of a column keyword.
@@ -1324,7 +1417,7 @@ class table(Table):
         if isinstance(keyword, str):
             return self._getkeyword(columnname, keyword, -1)
         else:
-            return self._getkeyword(columnname, '', keyword)
+            return self._getkeyword(columnname, "", keyword)
 
     def getkeywords(self):
         """Get the value of all table keywords.
@@ -1333,7 +1426,7 @@ class table(Table):
         value types.
 
         """
-        return self._getkeywords('')
+        return self._getkeywords("")
 
     def getcolkeywords(self, columnname):
         """Get the value of all keywords of a column.
@@ -1349,7 +1442,7 @@ class table(Table):
         keyset = self.getkeywords()
         names = []
         for key, value in keyset.items():
-            if isinstance(value, str) and value.find('Table: ') == 0:
+            if isinstance(value, str) and value.find("Table: ") == 0:
                 names.append(_do_remove_prefix(value))
         return names
 
@@ -1386,9 +1479,9 @@ class table(Table):
         if isinstance(val, table):
             val = _add_prefix(val.name())
         if isinstance(keyword, str):
-            return self._putkeyword('', keyword, -1, makesubrecord, val)
+            return self._putkeyword("", keyword, -1, makesubrecord, val)
         else:
-            return self._putkeyword('', '', keyword, makesubrecord, val)
+            return self._putkeyword("", "", keyword, makesubrecord, val)
 
     def putcolkeyword(self, columnname, keyword, value, makesubrecord=False):
         """Put the value of a column keyword.
@@ -1400,11 +1493,9 @@ class table(Table):
         if isinstance(val, table):
             val = _add_prefix(val.name())
         if isinstance(keyword, str):
-            return self._putkeyword(columnname, keyword, -1,
-                                    makesubrecord, val)
+            return self._putkeyword(columnname, keyword, -1, makesubrecord, val)
         else:
-            return self._putkeyword(columnname, '', keyword,
-                                    makesubrecord, val)
+            return self._putkeyword(columnname, "", keyword, makesubrecord, val)
 
     def putkeywords(self, value):
         """Put the value of multiple table keywords.
@@ -1413,7 +1504,7 @@ class table(Table):
         It puts all keywords similar to :func:`putkeyword`.
 
         """
-        return self._putkeywords('', value)
+        return self._putkeywords("", value)
 
     def putcolkeywords(self, columnname, value):
         """Put the value of multiple keywords in a column.
@@ -1435,9 +1526,9 @@ class table(Table):
 
         """
         if isinstance(keyword, str):
-            self._removekeyword('', keyword, -1)
+            self._removekeyword("", keyword, -1)
         else:
-            self._removekeyword('', '', keyword)
+            self._removekeyword("", "", keyword)
 
     def removecolkeyword(self, columnname, keyword):
         """Remove a column keyword.
@@ -1448,7 +1539,7 @@ class table(Table):
         if isinstance(keyword, str):
             self._removekeyword(columnname, keyword, -1)
         else:
-            self._removekeyword(columnname, '', keyword)
+            self._removekeyword(columnname, "", keyword)
 
     def getdesc(self, actual=True):
         """Get the table description.
@@ -1463,7 +1554,7 @@ class table(Table):
 
         # Strip out 0 length "HCcoordnames" and "HCidnames"
         # as these aren't valid. (See tabledefinehypercolumn)
-        hcdefs = tabledesc.get('_define_hypercolumn_', {})
+        hcdefs = tabledesc.get("_define_hypercolumn_", {})
 
         for c, hcdef in hcdefs.items():
             if "HCcoordnames" in hcdef and len(hcdef["HCcoordnames"]) == 0:
@@ -1493,6 +1584,7 @@ class table(Table):
 
         """
         import casacoretables.tables.tableutil as pt
+
         return pt.makecoldesc(columnname, self.getcoldesc(columnname, actual))
 
     def getdminfo(self, columnname=None):
@@ -1529,7 +1621,7 @@ class table(Table):
         for fld in dminfo.values():
             if columnname in fld["COLUMNS"]:
                 fldc = fld.copy()
-                del fldc['COLUMNS']  # remove COLUMNS field
+                del fldc["COLUMNS"]  # remove COLUMNS field
                 return fldc
         raise KeyError("Column " + columnname + " does not exist")
 
@@ -1571,8 +1663,7 @@ class table(Table):
         """
         return self._setdmprop(name, properties, bycolumn)
 
-    def showstructure(self, dataman=True, column=True, subtable=False,
-                      sort=False):
+    def showstructure(self, dataman=True, column=True, subtable=False, sort=False):
         """Show table structure in a formatted string.
 
         The structure of this table and optionally its subtables is shown.
@@ -1603,36 +1694,44 @@ class table(Table):
         tables referenced by table keywords.
 
         """
-        print('Table summary:', self.name())
-        print('Shape:', self.ncols(), 'columns by', self.nrows(), 'rows')
-        print('Info:', self.info())
+        print("Table summary:", self.name())
+        print("Shape:", self.ncols(), "columns by", self.nrows(), "rows")
+        print("Info:", self.info())
         tkeys = self.getkeywords()
-        if (len(tkeys) > 0):
-            print('Table keywords:', tkeys)
+        if len(tkeys) > 0:
+            print("Table keywords:", tkeys)
         columns = self.colnames()
-        if (len(columns) > 0):
-            print('Columns:', columns)
+        if len(columns) > 0:
+            print("Columns:", columns)
             for column in columns:
                 ckeys = self.getcolkeywords(column)
-                if (len(ckeys) > 0):
-                    print(column, 'keywords:', ckeys)
-        if (recurse):
+                if len(ckeys) > 0:
+                    print(column, "keywords:", ckeys)
+        if recurse:
             for key, value in tkeys.items():
                 tabname = _remove_prefix(value)
-                print('Summarizing subtable:', tabname)
+                print("Summarizing subtable:", tabname)
                 lt = table(tabname)
-                if (not lt.summary(recurse)):
+                if not lt.summary(recurse):
                     break
         return True
 
     def selectrows(self, rownrs):
         """Return a reference table containing the given rows."""
-        t = self._selectrows(rownrs, name='')
+        t = self._selectrows(rownrs, name="")
         # selectrows returns a Table object, so turn that into table.
         return table(t, _oper=3)
 
-    def query(self, query='', name='', sortlist='', columns='',
-              limit=0, offset=0, style='Python'):
+    def query(
+        self,
+        query="",
+        name="",
+        sortlist="",
+        columns="",
+        limit=0,
+        offset=0,
+        style="Python",
+    ):
         """Query the table and return the result as a reference table.
 
         This method queries the table. It forms a
@@ -1671,28 +1770,28 @@ class table(Table):
           The TaQL syntax style to be used (defaults to Python).
 
         """
-        if not query and not sortlist and not columns and \
-           limit <= 0 and offset <= 0:
-            raise ValueError('No selection done (arguments query, ' +
-                             'sortlist, columns, limit, and offset are empty)')
-        command = 'select '
+        if not query and not sortlist and not columns and limit <= 0 and offset <= 0:
+            raise ValueError(
+                "No selection done (arguments query, "
+                + "sortlist, columns, limit, and offset are empty)"
+            )
+        command = "select "
         if columns:
             command += columns
-        command += ' from $1'
+        command += " from $1"
         if query:
-            command += ' where ' + query
+            command += " where " + query
         if sortlist:
-            command += ' orderby ' + sortlist
+            command += " orderby " + sortlist
         if limit > 0:
-            command += ' limit %d' % limit
+            command += " limit %d" % limit
         if offset > 0:
-            command += ' offset %d' % offset
+            command += " offset %d" % offset
         if name:
-            command += ' giving ' + name
+            command += " giving " + name
         return tablecommand(command, style, [self])
 
-    def sort(self, sortlist, name='',
-             limit=0, offset=0, style='Python'):
+    def sort(self, sortlist, name="", limit=0, offset=0, style="Python"):
         """Sort the table and return the result as a reference table.
 
         This method sorts the table. It forms a
@@ -1720,16 +1819,16 @@ class table(Table):
           The TaQL syntax style to be used (defaults to Python).
 
         """
-        command = 'select from $1 orderby ' + sortlist
+        command = "select from $1 orderby " + sortlist
         if limit > 0:
-            command += ' limit %d' % limit
+            command += " limit %d" % limit
         if offset > 0:
-            command += ' offset %d' % offset
+            command += " offset %d" % offset
         if name:
-            command += ' giving ' + name
+            command += " giving " + name
         return tablecommand(command, style, [self])
 
-    def select(self, columns, name='', style='Python'):
+    def select(self, columns, name="", style="Python"):
         """Select columns and return the result as a reference table.
 
         This method represents the SELECT part of a TaQL command using the
@@ -1753,12 +1852,12 @@ class table(Table):
           The TaQL syntax style to be used (defaults to Python).
 
         """
-        command = 'select ' + columns + ' from $1'
+        command = "select " + columns + " from $1"
         if name:
-            command += ' giving ' + name
+            command += " giving " + name
         return tablecommand(command, style, [self])
 
-    def calc(self, expr, style='Python'):
+    def calc(self, expr, style="Python"):
         """Do a TaQL calculation
 
         The TaQL CALC command can be used to get the result of a calculation on
@@ -1775,10 +1874,10 @@ class table(Table):
           The TaQL syntax style to be used (defaults to Python).
 
         """
-        return tablecommand('calc from $1 calc ' + expr, style, [self])
+        return tablecommand("calc from $1 calc " + expr, style, [self])
 
     def browse(self, wait=True, tempname="/tmp/seltable"):
-        """ Browse a table using casabrowser or a simple wxwidget
+        """Browse a table using casabrowser or a simple wxwidget
         based browser.
 
         By default the casabrowser is used if it can be found (in your PATH).
@@ -1804,57 +1903,65 @@ class table(Table):
 
         """
         import os
+
         # Test if casabrowser can be found.
         # On OS-X 'which' always returns 0, so use test on top of it.
         # Nothing is written on stdout if not found.
-        if os.system('test `which casabrowser`x != x') == 0:
+        if os.system("test `which casabrowser`x != x") == 0:
             waitstr1 = ""
             waitstr2 = "foreground ..."
             if not wait:
                 waitstr1 = " &"
                 waitstr2 = "background ..."
             if self.iswritable():
-                print("Flushing data and starting casabrowser in the " +
-                      waitstr2)
+                print("Flushing data and starting casabrowser in the " + waitstr2)
             else:
                 print("Starting casabrowser in the " + waitstr2)
             self.flush()
             self.unlock()
-            if os.system('test -e ' + self.name() + '/table.dat') == 0:
-                os.system('casabrowser ' + self.name() + waitstr1)
+            if os.system("test -e " + self.name() + "/table.dat") == 0:
+                os.system("casabrowser " + self.name() + waitstr1)
             elif len(tempname) > 0:
                 print("  making a persistent copy in table " + tempname)
                 self.copy(tempname)
-                os.system('casabrowser ' + tempname + waitstr1)
+                os.system("casabrowser " + tempname + waitstr1)
                 if wait:
                     from casacoretables.tables import tabledelete
+
                     print("  finished browsing")
                     tabledelete(tempname)
 
                 else:
-                    print(" after browsing use tabledelete('" + tempname +
-                          "') to delete the copy")
+                    print(
+                        " after browsing use tabledelete('"
+                        + tempname
+                        + "') to delete the copy"
+                    )
             else:
                 print("Cannot browse because the table is in memory only")
-                print("You can browse a (shallow) persistent copy " +
-                      "of the table like: ")
+                print(
+                    "You can browse a (shallow) persistent copy "
+                    + "of the table like: "
+                )
                 print("   t.browse(True, '/tmp/tab1')")
         else:
             try:
                 import wxPython
             except ImportError:
-                print('casabrowser nor wxPython can be found')
+                print("casabrowser nor wxPython can be found")
                 return
             from wxPython.wx import wxPySimpleApp
             import sys
+
             app = wxPySimpleApp()
             from wxtablebrowser import CasaTestFrame
+
             frame = CasaTestFrame(None, sys.stdout, self)
             frame.Show(True)
             app.MainLoop()
 
     def view(self, wait=True, tempname="/tmp/seltable"):
-        """ View a table using casaviewer, casabrowser, or wxwidget
+        """View a table using casaviewer, casabrowser, or wxwidget
         based browser.
 
         The table is viewed depending on the type:
@@ -1887,46 +1994,52 @@ class table(Table):
 
         """
         import os
+
         # Determine the table type.
         # Test if casaviewer can be found.
         # On OS-X 'which' always returns 0, so use test on top of it.
         viewed = False
         type = self.info()["type"]
         if type == "Measurement Set" or type == "Image":
-            if os.system('test -x `which casaviewer` > /dev/null 2>&1') == 0:
+            if os.system("test -x `which casaviewer` > /dev/null 2>&1") == 0:
                 waitstr1 = ""
                 waitstr2 = "foreground ..."
                 if not wait:
                     waitstr1 = " &"
                     waitstr2 = "background ..."
                 if self.iswritable():
-                    print("Flushing data and starting casaviewer " +
-                          "in the " + waitstr2)
+                    print(
+                        "Flushing data and starting casaviewer " + "in the " + waitstr2
+                    )
                 else:
                     print("Starting casaviewer in the " + waitstr2)
                 self.flush()
                 self.unlock()
-                if os.system('test -e ' + self.name() + '/table.dat') == 0:
-                    os.system('casaviewer ' + self.name() + waitstr1)
+                if os.system("test -e " + self.name() + "/table.dat") == 0:
+                    os.system("casaviewer " + self.name() + waitstr1)
                     viewed = True
                 elif len(tempname) > 0:
-                    print("  making a persistent copy in table " +
-                          tempname)
+                    print("  making a persistent copy in table " + tempname)
                     self.copy(tempname)
-                    os.system('casaviewer ' + tempname + waitstr1)
+                    os.system("casaviewer " + tempname + waitstr1)
                     viewed = True
                     if wait:
                         from casacoretables.tables import tabledelete
+
                         print("  finished viewing")
                         tabledelete(tempname)
                     else:
-                        print("  after viewing use tabledelete('" +
-                              tempname + "') to delete the copy")
+                        print(
+                            "  after viewing use tabledelete('"
+                            + tempname
+                            + "') to delete the copy"
+                        )
                 else:
-                    print("Cannot browse because the table is " +
-                          "in memory only.")
-                    print("You can browse a (shallow) persistent " +
-                          "copy of the table like:")
+                    print("Cannot browse because the table is " + "in memory only.")
+                    print(
+                        "You can browse a (shallow) persistent "
+                        + "copy of the table like:"
+                    )
                     print("   t.view(True, '/tmp/tab1')")
         # Could not view the table, so browse it.
         if not viewed:
@@ -1937,10 +2050,10 @@ class table(Table):
         out = "<table class='taqltable' style='overflow-x:auto'>\n"
 
         # Print column names (not if they are all auto-generated)
-        if not(all([colname[:4] == "Col_" for colname in self.colnames()])):
+        if not (all([colname[:4] == "Col_" for colname in self.colnames()])):
             out += "<tr>"
             for colname in self.colnames():
-                out += "<th><b>"+colname+"</b></th>"
+                out += "<th><b>" + colname + "</b></th>"
             out += "</tr>"
 
         cropped = False
@@ -1962,7 +2075,10 @@ class table(Table):
         out += "</table>"
 
         if cropped:
-            out += ("<p style='text-align:center'>(" +
-                    str(self.nrows()-20)+" more rows)</p>\n")
+            out += (
+                "<p style='text-align:center'>("
+                + str(self.nrows() - 20)
+                + " more rows)</p>\n"
+            )
 
         return out

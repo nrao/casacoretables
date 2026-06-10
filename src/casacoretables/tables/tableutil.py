@@ -30,15 +30,22 @@ from .table import table
 from .tablehelper import _remove_prefix, _value_type_name
 
 
-def tablefromascii(tablename, asciifile,
-                   headerfile='',
-                   autoheader=False, autoshape=[],
-                   columnnames=[], datatypes=[],
-                   sep=' ',
-                   commentmarker='',
-                   firstline=1, lastline=-1,
-                   readonly=True,
-                   lockoptions='default', ack=True):
+def tablefromascii(
+    tablename,
+    asciifile,
+    headerfile="",
+    autoheader=False,
+    autoshape=[],
+    columnnames=[],
+    datatypes=[],
+    sep=" ",
+    commentmarker="",
+    firstline=1,
+    lastline=-1,
+    readonly=True,
+    lockoptions="default",
+    ack=True,
+):
     """Create a table from an ASCII file.
 
     Create a table from a file in ASCII format. Columnar data as well as
@@ -217,33 +224,50 @@ def tablefromascii(tablename, asciifile,
 
     """
     import os.path
+
     filename = os.path.expandvars(asciifile)
     filename = os.path.expanduser(filename)
     if not os.path.exists(filename):
         s = "File '%s' not found" % (filename)
         raise IOError(s)
-    if headerfile != '':
+    if headerfile != "":
         filename = os.path.expandvars(headerfile)
         filename = os.path.expanduser(filename)
         if not os.path.exists(filename):
             s = "File '%s' not found" % (filename)
             raise IOError(s)
-    tab = table(asciifile, headerfile, tablename, autoheader, autoshape,
-                sep, commentmarker, firstline, lastline,
-                _columnnames=columnnames, _datatypes=datatypes, _oper=1)
-    print('Input format: [' + tab._getasciiformat() + ']')
+    tab = table(
+        asciifile,
+        headerfile,
+        tablename,
+        autoheader,
+        autoshape,
+        sep,
+        commentmarker,
+        firstline,
+        lastline,
+        _columnnames=columnnames,
+        _datatypes=datatypes,
+        _oper=1,
+    )
+    print("Input format: [" + tab._getasciiformat() + "]")
     # Close table and reopen it in correct way.
     tab = 0
-    return table(tablename, readonly=readonly, lockoptions=lockoptions,
-                 ack=ack)
+    return table(tablename, readonly=readonly, lockoptions=lockoptions, ack=ack)
 
 
 # Create a description of a scalar column
-def makescacoldesc(columnname, value,
-                   datamanagertype='',
-                   datamanagergroup='',
-                   options=0, maxlen=0, comment='',
-                   valuetype='', keywords={}):
+def makescacoldesc(
+    columnname,
+    value,
+    datamanagertype="",
+    datamanagergroup="",
+    options=0,
+    maxlen=0,
+    comment="",
+    valuetype="",
+    keywords={},
+):
     """Create description of a scalar column.
 
     A description for a scalar column can be created from a name for
@@ -298,25 +322,34 @@ def makescacoldesc(columnname, value,
 
     """
     vtype = valuetype
-    if vtype == '':
+    if vtype == "":
         vtype = _value_type_name(value)
-    rec2 = {'valueType': vtype,
-            'dataManagerType': datamanagertype,
-            'dataManagerGroup': datamanagergroup,
-            'option': options,
-            'maxlen': maxlen,
-            'comment': comment,
-            'keywords': keywords}
-    return {'name': columnname,
-            'desc': rec2}
+    rec2 = {
+        "valueType": vtype,
+        "dataManagerType": datamanagertype,
+        "dataManagerGroup": datamanagergroup,
+        "option": options,
+        "maxlen": maxlen,
+        "comment": comment,
+        "keywords": keywords,
+    }
+    return {"name": columnname, "desc": rec2}
 
 
 # Create a description of an array column
-def makearrcoldesc(columnname, value, ndim=0,
-                   shape=[], datamanagertype='',
-                   datamanagergroup='',
-                   options=0, maxlen=0, comment='',
-                   valuetype='', keywords={}):
+def makearrcoldesc(
+    columnname,
+    value,
+    ndim=0,
+    shape=[],
+    datamanagertype="",
+    datamanagergroup="",
+    options=0,
+    maxlen=0,
+    comment="",
+    valuetype="",
+    keywords={},
+):
     """Create description of an array column.
 
     A description for a scalar column can be created from a name for
@@ -396,23 +429,24 @@ def makearrcoldesc(columnname, value, ndim=0,
 
     """
     vtype = valuetype
-    if vtype == '':
+    if vtype == "":
         vtype = _value_type_name(value)
     if len(shape) > 0:
         if ndim <= 0:
             ndim = len(shape)
-    rec2 = {'valueType': vtype,
-            'dataManagerType': datamanagertype,
-            'dataManagerGroup': datamanagergroup,
-            'ndim': ndim,
-            'shape': shape,
-            '_c_order': True,
-            'option': options,
-            'maxlen': maxlen,
-            'comment': comment,
-            'keywords': keywords}
-    return {'name': columnname,
-            'desc': rec2}
+    rec2 = {
+        "valueType": vtype,
+        "dataManagerType": datamanagertype,
+        "dataManagerGroup": datamanagergroup,
+        "ndim": ndim,
+        "shape": shape,
+        "_c_order": True,
+        "option": options,
+        "maxlen": maxlen,
+        "comment": comment,
+        "keywords": keywords,
+    }
+    return {"name": columnname, "desc": rec2}
 
 
 # Create a description of a column
@@ -440,8 +474,7 @@ def makecoldesc(columnname, desc):
     the same description as column `othercol`.
 
     """
-    return {'name': columnname,
-            'desc': desc}
+    return {"name": columnname, "desc": desc}
 
 
 # Create a table description from a set of column descriptions
@@ -474,11 +507,14 @@ def maketabdesc(descs=[]):
     if isinstance(descs, dict):
         descs = [descs]
     for desc in descs:
-        colname = desc['name']
+        colname = desc["name"]
         if colname in rec:
-            raise ValueError('Column name ' + colname + ' multiply used in table description')
-        rec[colname] = desc['desc']
+            raise ValueError(
+                "Column name " + colname + " multiply used in table description"
+            )
+        rec[colname] = desc["desc"]
     return rec
+
 
 def makedminfo(tabdesc, group_spec=None):
     """Creates a data manager information object.
@@ -513,6 +549,7 @@ def makedminfo(tabdesc, group_spec=None):
         """
         Keep track of the columns, type and spec of each data manager group
         """
+
         def __init__(self):
             self.columns = []
             self.type = None
@@ -523,7 +560,7 @@ def makedminfo(tabdesc, group_spec=None):
     # Iterate through the table columns, grouping them
     # by their dataManagerGroup
     for c, d in tabdesc.items():
-        if c in ('_define_hypercolumn_', '_keywords_', '_private_keywords_'):
+        if c in ("_define_hypercolumn_", "_keywords_", "_private_keywords_"):
             continue
 
         # Extract group and data manager type
@@ -551,22 +588,25 @@ def makedminfo(tabdesc, group_spec=None):
         if dm_group.type is None:
             dm_group.type = type_
         elif not dm_group.type == type_:
-            raise ValueError("Mismatched dataManagerType '%s' "
-                              "for dataManagerGroup '%s' "
-                              "Previously, the type was '%s'" %
-                                  (type_, group, dm_group.type))
+            raise ValueError(
+                "Mismatched dataManagerType '%s' "
+                "for dataManagerGroup '%s' "
+                "Previously, the type was '%s'" % (type_, group, dm_group.type)
+            )
 
     # Output a data manager entry
     return {
-      '*%d'%(i+1): {
-        'COLUMNS': dm_group.columns,
-        'TYPE': dm_group.type,
-        'NAME': group,
-        'SPEC' : dm_group.spec,
-        'SEQNR': i
-      } for i, (group, dm_group)
-      in enumerate(dm_groups.items())
+        "*%d"
+        % (i + 1): {
+            "COLUMNS": dm_group.columns,
+            "TYPE": dm_group.type,
+            "NAME": group,
+            "SPEC": dm_group.spec,
+            "SEQNR": i,
+        }
+        for i, (group, dm_group) in enumerate(dm_groups.items())
     }
+
 
 # Create the old glish names for them.
 tablecreatescalarcoldesc = makescacoldesc
@@ -576,10 +616,9 @@ tablecreatedm = makedminfo
 
 
 # Define a hypercolumn in the table description.
-def tabledefinehypercolumn(tabdesc,
-                           name, ndim, datacolumns,
-                           coordcolumns=False,
-                           idcolumns=False):
+def tabledefinehypercolumn(
+    tabdesc, name, ndim, datacolumns, coordcolumns=False, idcolumns=False
+):
     """Add a hypercolumn to a table description.
 
     It defines a hypercolumn and adds it the given table description.
@@ -624,15 +663,14 @@ def tabledefinehypercolumn(tabdesc,
       the TiledColumnStMan).
 
     """
-    rec = {'HCndim': ndim,
-           'HCdatanames': datacolumns}
+    rec = {"HCndim": ndim, "HCdatanames": datacolumns}
     if not isinstance(coordcolumns, bool):
-        rec['HCcoordnames'] = coordcolumns
+        rec["HCcoordnames"] = coordcolumns
     if not isinstance(idcolumns, bool):
-        rec['HCidnames'] = idcolumns
-    if '_define_hypercolumn_' not in tabdesc:
-        tabdesc['_define_hypercolumn_'] = {}
-    tabdesc['_define_hypercolumn_'][name] = rec
+        rec["HCidnames"] = idcolumns
+    if "_define_hypercolumn_" not in tabdesc:
+        tabdesc["_define_hypercolumn_"] = {}
+    tabdesc["_define_hypercolumn_"][name] = rec
 
 
 def tabledelete(tablename, checksubtables=False, ack=True):
@@ -645,12 +683,12 @@ def tabledelete(tablename, checksubtables=False, ack=True):
     tabname = _remove_prefix(tablename)
     t = table(tabname, ack=False)
     if t.ismultiused(checksubtables):
-        print('Table', tabname, 'cannot be deleted; it is still in use')
+        print("Table", tabname, "cannot be deleted; it is still in use")
     else:
         t = 0
         table(tabname, readonly=False, _delete=True, ack=False)
         if ack:
-            print('Table', tabname, 'has been deleted')
+            print("Table", tabname, "has been deleted")
 
 
 def tableexists(tablename):
@@ -674,8 +712,16 @@ def tableiswritable(tablename):
     return result
 
 
-def tablecopy(tablename, newtablename, deep=False, valuecopy=False, dminfo={},
-              endian='aipsrc', memorytable=False, copynorows=False):
+def tablecopy(
+    tablename,
+    newtablename,
+    deep=False,
+    valuecopy=False,
+    dminfo={},
+    endian="aipsrc",
+    memorytable=False,
+    copynorows=False,
+):
     """Copy a table.
 
     It is the same as :func:`table.copy`, but without the need to open
@@ -683,9 +729,15 @@ def tablecopy(tablename, newtablename, deep=False, valuecopy=False, dminfo={},
 
     """
     t = table(tablename, ack=False)
-    return t.copy(newtablename, deep=deep, valuecopy=valuecopy,
-                  dminfo=dminfo, endian=endian, memorytable=memorytable,
-                  copynorows=copynorows)
+    return t.copy(
+        newtablename,
+        deep=deep,
+        valuecopy=valuecopy,
+        dminfo=dminfo,
+        endian=endian,
+        memorytable=memorytable,
+        copynorows=copynorows,
+    )
 
 
 def tablerename(tablename, newtablename):
@@ -720,8 +772,7 @@ def tablesummary(tablename):
     t.summary()
 
 
-def tablestructure(tablename, dataman=True, column=True, subtable=False,
-                   sort=False):
+def tablestructure(tablename, dataman=True, column=True, subtable=False, sort=False):
     """Print the structure of a table.
 
     It is the same as :func:`table.showstructure`, but without the need to open

@@ -79,7 +79,9 @@ class tableindex(TableIndex):
         if not isinstance(d, dict):
             cols = self.colnames()
             if len(cols) != 1:
-                raise RuntimeError("key has to be given as a dict for a multi-column index")
+                raise RuntimeError(
+                    "key has to be given as a dict for a multi-column index"
+                )
             d = {cols[0]: key}
         return d
 
@@ -173,10 +175,11 @@ class tableindex(TableIndex):
         lowerkey = 0
         if key.start is not None:
             lowerkey = key.start
-        upperkey = 2147483647;  # highest int
+        upperkey = 2147483647
+        # highest int
         if key.stop is not None:
             upperkey = key.stop
-            if (lowerkey >= upperkey):
+            if lowerkey >= upperkey:
                 raise RuntimeError("tableindex slice stop must be > start")
         rnrs = self.rownrs(lowerkey, upperkey, True, False)
         if len(rnrs) == 0:

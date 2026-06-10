@@ -6,7 +6,7 @@ from tempfile import mkdtemp
 from shutil import rmtree
 from os.path import join
 
-unicode_string = u'«ταБЬℓσ»'
+unicode_string = "«ταБЬℓσ»"
 
 
 class TestUnicode(unittest.TestCase):
@@ -23,18 +23,18 @@ class TestUnicode(unittest.TestCase):
 
     def test_getcol(self):
         c1 = makescacoldesc(unicode_string, 0)
-        t = table(join(self.workdir, 'ascii'), maketabdesc([c1]), ack=False)
+        t = table(join(self.workdir, "ascii"), maketabdesc([c1]), ack=False)
         t.getcol(unicode_string)
 
     def test_numpy_unicode(self):
-        table_path = join(self.workdir, 'blah.ms')
-        col1 = makescacoldesc('mycol1', 'test', valuetype='string')
-        col2 = makescacoldesc('mycol2', 'test', valuetype='string')
+        table_path = join(self.workdir, "blah.ms")
+        col1 = makescacoldesc("mycol1", "test", valuetype="string")
+        col2 = makescacoldesc("mycol2", "test", valuetype="string")
         t = table(table_path, maketabdesc([col1, col2]), ack=False)
         t.addrows(2)
-        t.putcol('mycol1', np.array([unicode_string, unicode_string]))
-        t.putcol('mycol2', [unicode_string, unicode_string])
+        t.putcol("mycol1", np.array([unicode_string, unicode_string]))
+        t.putcol("mycol2", [unicode_string, unicode_string])
         t.close()
 
         t = table(table_path)
-        self.assertEqual(t.getcol('mycol1'), t.getcol('mycol2'))
+        self.assertEqual(t.getcol("mycol1"), t.getcol("mycol2"))
