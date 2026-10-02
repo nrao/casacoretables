@@ -27,7 +27,6 @@
 
 # Make interface to class TableRowProxy available.
 from ._tables import TableRow
-
 from .tablehelper import _check_key_slice
 
 # A normal tablerow object keeps a reference to a table object to be able
