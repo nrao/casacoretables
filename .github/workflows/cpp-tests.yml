@@ -3,24 +3,38 @@
 # Configures with -DBUILD_CPP_TESTS=ON (and the pybind11 module off, since it
 # is not needed for the C++ tests). Each test runs in a private temp directory
 # via tests/cpp/run_assay.sh, so parallel ctest is safe.
+#
+# Runs on pull requests and merges to main only (branch pushes run the lint
+# and the Python 3.13 tests).
 name: C++ Tests
 
 on:
-  push:
-    paths-ignore:
-      - '**.md'
-      - '**.rst'
   pull_request:
     paths-ignore:
       - '**.md'
       - '**.rst'
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - '**.rst'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref == 'refs/heads/main' && github.run_id || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
 
 jobs:
   ctest:
     name: ctest (ubuntu)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Install build tools (bison>=3, flex, cmake, ninja)
         run: |

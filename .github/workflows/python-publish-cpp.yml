@@ -4,12 +4,28 @@
 # are handled directly: bison>=3 / flex are installed inside each build
 # environment (dnf in the manylinux container, brew on macOS), and every wheel
 # is tested against the package's own pytest suite before upload.
+#
+# Pull requests and pushes to main build and test every wheel as a check
+# (CPython 3.12-3.14); only a published release uploads to PyPI.
 name: Build & Publish to PyPI
 
 on:
   release:
     types: [published]
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '**.rst'
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - '**.rst'
   workflow_dispatch:        # allow manual wheel builds (no publish)
+
+permissions:
+  contents: read
 
 jobs:
   build-wheels:
@@ -20,23 +36,29 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Python (cibuildwheel driver)
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
-          python-version: "3.11"
+          python-version: "3.13"
 
+      # Pinned so a new cibuildwheel release cannot silently change the set of
+      # wheels (2.21.3 could not build CPython 3.14).
       - name: Install cibuildwheel
-        run: python -m pip install --upgrade pip cibuildwheel==2.21.3
+        run: python -m pip install --upgrade pip cibuildwheel==4.2.1
 
       - name: Build wheels
         env:
-          CIBW_BUILD: "cp311-* cp312-* cp313-*"
+          # CPython 3.12-3.14 (the VIPER-wide set); cp3??t-* in CIBW_SKIP
+          # guards against free-threaded builds.
+          CIBW_BUILD: "cp312-* cp313-* cp314-*"
 
           # Linux: 64-bit manylinux only.
           CIBW_ARCHS_LINUX: "x86_64"
-          CIBW_SKIP: "*-musllinux_* *-manylinux_i686"
+          CIBW_SKIP: "*-musllinux_* *-manylinux_i686 cp3??t-*"
           CIBW_MANYLINUX_X86_64_IMAGE: "manylinux_2_28"
           # macOS runner is arm64.
           CIBW_ARCHS_MACOS: "arm64"
@@ -54,7 +76,7 @@ jobs:
         run: python -m cibuildwheel --output-dir wheelhouse
 
       - name: Upload wheel artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: wheels-${{ matrix.os }}
           path: wheelhouse/*.whl
@@ -63,13 +85,15 @@ jobs:
     name: sdist
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
         with:
-          python-version: "3.11"
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
       - run: python -m pip install --upgrade pip build
       - run: python -m build --sdist
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: sdist
           path: dist/*.tar.gz
@@ -89,12 +113,12 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: wheels-*
           path: dist
           merge-multiple: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: sdist
           path: dist

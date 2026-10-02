@@ -1,0 +1,16 @@
+# Lint and format check with ruff (configuration: ruff.toml), using the
+# shared reusable workflow. Replaces black.yml; runs on every push and pull
+# request.
+name: Lint
+
+on: [push, pull_request]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref == 'refs/heads/main' && github.run_id || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  call-ruff:
+    uses: nrao/gh-actions-templates-public/.github/workflows/ruff-template.yml@17-ci-python-312-314-push-pr-split
+    with:
+      ruff-version: "0.16.10"

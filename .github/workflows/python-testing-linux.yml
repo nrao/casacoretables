@@ -3,6 +3,8 @@
 # Standalone (does not call the shared template) because casacoretables is a
 # compiled (C++/pybind11) package: it needs bison>=3 and flex at build time,
 # which the pure-Python template does not install.
+#
+# Push to a branch: Python 3.13 only. Pull request / push to main: 3.12-3.14.
 name: Linux Tests
 
 on:
@@ -15,6 +17,16 @@ on:
       - '**.md'
       - '**.rst'
 
+concurrency:
+  # A newer push to the same branch/PR cancels the older run. Each run on main
+  # gets its own group, so merges are never queued behind or cancelled by
+  # each other.
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref == 'refs/heads/main' && github.run_id || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
 jobs:
   test:
     name: linux (py${{ matrix.python-version }})
@@ -22,12 +34,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        python-version: ${{ fromJson((github.event_name == 'push' && github.ref != 'refs/heads/main') && '["3.13"]' || '["3.12", "3.13", "3.14"]') }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 

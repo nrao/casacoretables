@@ -60,7 +60,7 @@ casacoretables/
 │       └── test_table.py test_unicode.py test_util.py
 ├── docs/
 │   └── casacoretables_api_tour.ipynb   # full Python API tour (runnable)
-└── .github/workflows/          # black, linux/macos pytest, C++ ctest, cibuildwheel publish
+└── .github/workflows/          # ruff lint, linux/macos pytest, C++ ctest, cibuildwheel publish
 ```
 
 ---
@@ -324,21 +324,28 @@ source of truth — edit it directly and re-run with
 
 ## 8. CI workflows (`.github/workflows/`)
 
-- `black.yml` — calls the shared reusable lint workflow
-  (`nrao/gh-actions-templates-public/.github/workflows/black-template.yml@main`).
+When CI runs (the VIPER policy): a push to a branch runs the lint and the
+Linux Python tests on 3.13 only; pull requests and pushes to `main` run
+everything (Linux + macOS Python tests on 3.12, 3.13 and 3.14, the C++ tests
+and the wheel build).
+
+- `lint.yml` — `ruff check` + `ruff format --check` (config in `ruff.toml`)
+  through the shared reusable workflow
+  (`nrao/gh-actions-templates-public/.github/workflows/ruff-template.yml`).
 - `python-testing-linux.yml` / `python-testing-macos.yml` — **standalone** (not
   template-based) because the package needs bison/flex (apt on Linux, conda on
   macOS). Run `pytest tests/python/`.
 - `cpp-tests.yml` — **standalone**: configure `-DBUILD_CPP_TESTS=ON`, build, `ctest`.
-- `python-publish-cpp.yml` — **standalone** `cibuildwheel` (cp311–313,
-  manylinux_2_28 x86_64 + macOS arm64) + sdist, publishes on GitHub `release`.
-  Installs bison/flex via `CIBW_BEFORE_ALL` (dnf in the container, brew on macOS
-  with the keg-only bison prepended to `PATH`); tests each wheel with
-  `pytest {project}/tests/python`. Needs a `PYPI_TOKEN` secret + `release` env.
+- `python-publish-cpp.yml` — **standalone** `cibuildwheel` 4.2.1 (cp312–cp314,
+  manylinux_2_28 x86_64 + macOS arm64) + sdist; uploads to PyPI (Trusted
+  Publishing) only for a published GitHub release, otherwise it is a build
+  check. Installs bison/flex via `CIBW_BEFORE_ALL` (dnf in the container, brew
+  on macOS with the keg-only bison prepended to `PATH`); tests each wheel with
+  `pytest {project}/tests/python`.
 
 Standalone (rather than calling the shared testing/publish templates) because a
 reusable workflow can't inject the bison/flex install step, and the shared macOS
-template installs python-casacore + pins Boost, which this package must not do.
+template installs python-casacore, which this package must not do.
 
 ---
 
