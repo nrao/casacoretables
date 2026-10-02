@@ -229,13 +229,13 @@ def tablefromascii(
     filename = os.path.expanduser(filename)
     if not os.path.exists(filename):
         s = "File '%s' not found" % (filename)
-        raise IOError(s)
+        raise OSError(s)
     if headerfile != "":
         filename = os.path.expandvars(headerfile)
         filename = os.path.expanduser(filename)
         if not os.path.exists(filename):
             s = "File '%s' not found" % (filename)
-            raise IOError(s)
+            raise OSError(s)
     tab = table(
         asciifile,
         headerfile,
@@ -545,7 +545,7 @@ def makedminfo(tabdesc, group_spec=None):
     if group_spec is None:
         group_spec = {}
 
-    class DMGroup(object):
+    class DMGroup:
         """
         Keep track of the columns, type and spec of each data manager group
         """
@@ -596,8 +596,7 @@ def makedminfo(tabdesc, group_spec=None):
 
     # Output a data manager entry
     return {
-        "*%d"
-        % (i + 1): {
+        "*%d" % (i + 1): {
             "COLUMNS": dm_group.columns,
             "TYPE": dm_group.type,
             "NAME": group,

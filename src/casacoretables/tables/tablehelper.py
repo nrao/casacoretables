@@ -25,8 +25,9 @@
 #
 # $Id: tableutil.py,v 1.6 2006/11/08 00:12:55 gvandiep Exp $
 
-import numpy
 import re
+
+import numpy
 
 # `quanta` is an optional casacore module that this tables-only package does
 # not bundle. It is used solely to pretty-print date/quantity column values in

@@ -30,12 +30,12 @@ import unittest
 import numpy as np
 
 from casacoretables.tables import (
-    table,
-    maketabdesc,
-    makescacoldesc,
     makearrcoldesc,
-    taql,
+    makescacoldesc,
+    maketabdesc,
+    table,
     tabledelete,
+    taql,
 )
 
 

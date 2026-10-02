@@ -27,7 +27,6 @@
 
 # Make interface to class TableIterProxy available.
 from ._tables import TableIter
-
 from .table import table
 
 

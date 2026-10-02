@@ -1,23 +1,24 @@
 """Tests for tables module."""
 
 import unittest
+
 from casacoretables.tables import (
-    makescacoldesc,
     makearrcoldesc,
-    table,
-    maketabdesc,
-    tableexists,
-    tableiswritable,
-    tableinfo,
-    tablefromascii,
-    tabledelete,
     makecoldesc,
-    taql,
-    tablerename,
-    tablecopy,
-    tablecolumn,
-    tabledefinehypercolumn,
     makedminfo,
+    makescacoldesc,
+    maketabdesc,
+    table,
+    tablecolumn,
+    tablecopy,
+    tabledefinehypercolumn,
+    tabledelete,
+    tableexists,
+    tablefromascii,
+    tableinfo,
+    tableiswritable,
+    tablerename,
+    taql,
 )
 
 # MeasurementSet helpers live in casacore's `ms` module, which this
@@ -25,22 +26,23 @@ from casacoretables.tables import (
 # MS-specific tests below are skipped.
 try:
     from casacoretables.tables import (
-        msconcat,
-        removeDerivedMSCal,
         addDerivedMSCal,
-        removeImagingColumns,
         addImagingColumns,
         complete_ms_desc,
-        required_ms_desc,
         default_ms,
         default_ms_subtable,
+        msconcat,
+        removeDerivedMSCal,
+        removeImagingColumns,
+        required_ms_desc,
     )
 
     HAVE_MS = True
 except ImportError:
     HAVE_MS = False
-import numpy as np
 import collections
+
+import numpy as np
 
 subtables = (
     "ANTENNA",
@@ -506,7 +508,7 @@ class TestTable(unittest.TestCase):
     def test_msutil(self):
         """Testing msutil."""
         datacoldesc = makearrcoldesc("DATA", 0.0, ndim=2, shape=[20, 4])
-        ms = default_ms("tabtemp", maketabdesc((datacoldesc)))
+        ms = default_ms("tabtemp", maketabdesc(datacoldesc))
         ms.close()
 
         spw = table("tabtemp/SPECTRAL_WINDOW", readonly=False)
@@ -656,7 +658,6 @@ class TestTable(unittest.TestCase):
         # Create measurement set with table description
         # and data manager info
         with default_ms("ttable.py_tmp.ms2", ms2_desc, ms2_dminfo) as ms2:
-
             # Check that UVW was correctly constructed
             desc = ms2.getcoldesc("UVW")
             self.assertTrue(desc["dataManagerType"] == "TiledColumnStMan")

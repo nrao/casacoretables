@@ -1,10 +1,11 @@
-# coding=utf-8
-import numpy as np
 import unittest
-from casacoretables.tables import table, maketabdesc, makescacoldesc
-from tempfile import mkdtemp
-from shutil import rmtree
 from os.path import join
+from shutil import rmtree
+from tempfile import mkdtemp
+
+import numpy as np
+
+from casacoretables.tables import makescacoldesc, maketabdesc, table
 
 unicode_string = "«ταБЬℓσ»"
 

@@ -57,9 +57,7 @@ submodule `msutil <#measurementset-utility-functions>`_
 
 """
 
-from .table import table
-from .table import tablecommand
-from .table import taql
+from .table import table, tablecommand, taql
 from .tablecolumn import tablecolumn
 from .tableindex import tableindex
 from .tableiter import tableiter

@@ -37,8 +37,7 @@ Several utility functions exist. Important ones are:
 """
 
 from ._tables import Table
-
-from .tablehelper import _add_prefix, _remove_prefix, _do_remove_prefix, _format_row
+from .tablehelper import _add_prefix, _do_remove_prefix, _format_row, _remove_prefix
 
 # NOTE: MeasurementSet helpers (default_ms / default_ms_subtable and the
 # _required_ms_desc / _complete_ms_desc descriptors) are intentionally not
@@ -1946,12 +1945,13 @@ class table(Table):
                 print("   t.browse(True, '/tmp/tab1')")
         else:
             try:
-                import wxPython
+                import wxPython  # noqa: F401  (availability check)
             except ImportError:
                 print("casabrowser nor wxPython can be found")
                 return
-            from wxPython.wx import wxPySimpleApp
             import sys
+
+            from wxPython.wx import wxPySimpleApp
 
             app = wxPySimpleApp()
             from wxtablebrowser import CasaTestFrame

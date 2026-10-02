@@ -1,0 +1,30 @@
+# Ruff configuration (lint + format), replacing black. Same rule set as the
+# VIPER packages (toolviper, xradio, graphviper, astroviper):
+#   E4/E7/E9 -- pycodestyle errors (import placement, statement syntax, runtime)
+#   F        -- pyflakes: undefined names, unused imports, unused variables
+#   B        -- flake8-bugbear: likely bugs (mutable defaults, loop captures, ...)
+#   UP       -- pyupgrade: outdated syntax/typing
+#   I        -- isort-compatible import sorting
+target-version = "py311"
+# Notebooks and Markdown code blocks were not formatted by black either.
+extend-exclude = ["*.ipynb", "*.md"]
+
+[lint]
+select = ["E4", "E7", "E9", "F", "B", "UP", "I"]
+# Findings that need hand edits (much of the Python layer mirrors
+# python-casacore's API, e.g. its mutable argument defaults). Ignored so the
+# switch from black to ruff is style-only. TODO: fix and drop entries.
+ignore = [
+    "B006",  # mutable argument default
+    "B007",  # unused loop control variable
+    "B904",  # raise without `from` inside except
+    "E702",  # multiple statements on one line (semicolon)
+    "E722",  # bare except
+    "F841",  # unused local variable
+    "UP031", # printf-style string formatting
+]
+
+[lint.per-file-ignores]
+# Package __init__.py files re-export the public API (python-casacore style);
+# the "unused" and star imports are the point.
+"__init__.py" = ["F401", "F403"]
